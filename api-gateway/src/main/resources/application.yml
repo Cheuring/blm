@@ -1,0 +1,109 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        namespace: blm-microservices
+      config:
+        server-addr: localhost:8848
+        namespace: blm-microservices
+        file-extension: yml
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # 认证中心路由
+        - id: auth-center
+          uri: lb://auth-center
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0
+
+        # 用户服务路由
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=0
+
+        # 商家服务路由（预留）
+        - id: store-service
+          uri: lb://store-service
+          predicates:
+            - Path=/api/stores/**
+          filters:
+            - StripPrefix=0
+
+        # 订单服务路由（预留）
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=0
+
+        # 骑手服务路由（预留）
+        - id: rider-service
+          uri: lb://rider-service
+          predicates:
+            - Path=/api/riders/**
+          filters:
+            - StripPrefix=0
+
+        # 管理后台路由（预留）
+        - id: admin-service
+          uri: lb://admin-service
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - StripPrefix=0
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      password: 
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+# JWT配置
+jwt:
+  secret: blm-takeout-secret-key-for-jwt-token-generation-and-validation-2024
+  access-token-expiration: PT2H
+  refresh-token-expiration: P7D
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
+# 日志配置
+logging:
+  level:
+    com.blm: debug
+    org.springframework.cloud.gateway: debug

@@ -1,30 +1,32 @@
-package com.blm.order.config;
+package com.blm.gateway.config;
 
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+/**
+ * 网关 OpenAPI 聚合配置
+ */
 @Configuration
-public class SwaggerConfig {
-    
+public class OpenApiConfig {
+
     @Bean
-    public OpenAPI orderServiceOpenAPI() {
+    public OpenAPI gatewayOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("订单服务 API")
-                        .description("订单管理、订单项管理等相关接口")
+                        .title("饱了么微服务 API 网关")
+                        .description("聚合所有微服务的 API 文档")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("BLM Team")
                                 .email("support@blm.com")))
                 .servers(List.of(
-                        new Server().url("http://localhost:8083").description("本地开发环境"),
-                        new Server().url("http://localhost:8080").description("网关环境")
+                        new Server().url("http://localhost:8080").description("API 网关")
                 ));
     }
 }

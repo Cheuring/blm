@@ -1,6 +1,6 @@
 package com.blm.common.dto;
 
-import com.blm.entity.User;
+import com.blm.common.entity.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;

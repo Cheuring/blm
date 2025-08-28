@@ -3,6 +3,7 @@ package com.blm.user.controller;
 import com.blm.common.result.Result;
 import com.blm.common.vo.PageVO;
 import com.blm.common.vo.StoreVO;
+import com.blm.user.service.HistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

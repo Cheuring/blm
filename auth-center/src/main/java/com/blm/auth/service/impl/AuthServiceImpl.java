@@ -4,9 +4,9 @@ import com.blm.auth.service.AuthService;
 import com.blm.common.dto.LoginDTO;
 import com.blm.common.dto.RegisterDTO;
 import com.blm.common.entity.User;
-import com.blm.common.exception.BusinessException;
+import com.blm.common.exception.CommonException;
 import com.blm.common.feign.UserServiceClient;
-import com.blm.common.result.ResultCode;
+import com.blm.common.result.ExceptionConstant;
 import com.blm.common.util.JwtUtil;
 import com.blm.common.vo.LoginVO;
 import com.blm.common.vo.UserVO;
@@ -35,16 +35,16 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginVO login(LoginDTO dto) {
         // 调用用户服务验证用户
-        User user = userServiceClient.getUserByUsername(dto.getUsername()).orElseThrow(() -> new BusinessException(ResultCode.USER_NOT_FOUND));
-
+        User user = userServiceClient.getUserByUsername(dto.getUsername())
+                .orElseThrow(() -> new CommonException(ExceptionConstant.USER_NOT_FOUND));
         // 检查用户状态
         if (user.getStatus() == User.INACTIVE) {
-            throw new BusinessException(ResultCode.USER_DISABLED);
+            throw new CommonException(ExceptionConstant.USER_ACCOUNT_DISABLED);
         }
 
         // check password
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
-            throw new BusinessException(ResultCode.INVALID_CREDENTIALS);
+            throw new CommonException(ExceptionConstant.USER_INVALID_CREDENTIALS);
         }
 
         // 生成Token
@@ -64,7 +64,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserVO register(RegisterDTO dto) {
-        return userServiceClient.register(dto).orElseThrow(() -> new BusinessException(ResultCode.USER_ALREADY_EXISTS));
+        return userServiceClient.register(dto)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.USER_ALREADY_EXISTS));
     }
 
 }

@@ -1,6 +1,6 @@
 package com.blm.common.vo;
 
-import com.blm.entity.Store;
+import com.blm.common.entity.Store;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

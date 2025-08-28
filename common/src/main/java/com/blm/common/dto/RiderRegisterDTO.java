@@ -1,6 +1,6 @@
 package com.blm.common.dto;
 
-import com.blm.entity.Rider;
+import com.blm.common.entity.Rider;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

@@ -1,6 +1,6 @@
 package com.blm.common.dto;
 
-import com.blm.entity.Food;
+import com.blm.common.entity.Food;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

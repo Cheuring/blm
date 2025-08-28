@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: auth-center
+  config:
+    import:
+      - optional:nacos:application-${spring.application.name}.yml
   cloud:
     nacos:
       discovery:

@@ -1,14 +1,16 @@
 package com.blm.gateway.filter;
 
 import com.blm.common.entity.User;
+import com.blm.common.exception.CommonException;
 import com.blm.common.feign.UserServiceClient;
+import com.blm.common.result.ExceptionConstant;
 import com.blm.common.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -31,10 +33,10 @@ public class AuthFilter implements GlobalFilter, Ordered {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+//    @Autowired
+//    private RedisTemplate<String, String> redisTemplate;
 
-    @Autowired
+    @Autowired @Lazy
     private UserServiceClient userServiceClient;
 
     private static final String USER_ROLES_CACHE_PREFIX = "gateway:user:roles:";
@@ -127,20 +129,21 @@ public class AuthFilter implements GlobalFilter, Ordered {
     private String getUserRoles(String userId) {
         try {
             // 从Redis缓存获取用户角色信息
-            String cacheKey = USER_ROLES_CACHE_PREFIX + userId;
-            String roles = redisTemplate.opsForValue().get(cacheKey);
-
-            if (StringUtils.hasText(roles)) {
-                return roles;
-            }
+//            String cacheKey = USER_ROLES_CACHE_PREFIX + userId;
+//            String roles = redisTemplate.opsForValue().get(cacheKey);
+//
+//            if (StringUtils.hasText(roles)) {
+//                return roles;
+//            }
 
             // 缓存未命中，返回默认角色
             // 在实际项目中，这里应该调用用户服务获取角色信息
-            User user = userServiceClient.getUserById(Long.valueOf(userId));
+            User user = userServiceClient.getUserById(Long.valueOf(userId))
+                    .orElseThrow(() -> new CommonException(ExceptionConstant.USER_NOT_FOUND));
             String userRoles = user.getRole();
 
             // 缓存用户角色信息，设置5分钟过期
-            redisTemplate.opsForValue().set(cacheKey, userRoles, Duration.ofMinutes(5));
+//            redisTemplate.opsForValue().set(cacheKey, userRoles, Duration.ofMinutes(5));
 
             return userRoles;
         } catch (Exception e) {

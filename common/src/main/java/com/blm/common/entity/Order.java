@@ -1,6 +1,6 @@
 package com.blm.common.entity;
 
-import com.blm.dto.PaymentDTO;
+import com.blm.common.dto.PaymentDTO;
 import lombok.Data;
 
 import java.math.BigDecimal;

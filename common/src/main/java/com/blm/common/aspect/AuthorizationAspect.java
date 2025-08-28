@@ -2,7 +2,7 @@ package com.blm.common.aspect;
 
 import com.blm.common.annotation.RequireRole;
 import com.blm.common.exception.BusinessException;
-import com.blm.common.result.ResultCode;
+import com.blm.common.result.ExceptionConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -28,7 +28,7 @@ public class AuthorizationAspect {
         // 获取当前请求
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attributes == null) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED, "无法获取请求上下文");
+            throw new BusinessException(ExceptionConstant.REQ_UNAUTHORIZED.getCode(), "无法获取请求上下文");
         }
 
         HttpServletRequest request = attributes.getRequest();
@@ -38,7 +38,7 @@ public class AuthorizationAspect {
         String userRoles = request.getHeader("X-User-Roles");
 
         if (userId == null || userRoles == null) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED, "缺少用户认证信息");
+            throw new BusinessException(ExceptionConstant.REQ_UNAUTHORIZED.getCode(), "缺少用户认证信息");
         }
 
         // 检查角色权限
@@ -57,7 +57,7 @@ public class AuthorizationAspect {
         if (!hasPermission) {
             log.warn("用户 {} 尝试访问需要角色 {} 的资源，当前角色: {}", 
                     userId, requiredRoles, currentRoles);
-            throw new BusinessException(ResultCode.FORBIDDEN, requireRole.message());
+            throw new BusinessException(ExceptionConstant.REQ_FORBIDDEN.getCode(), requireRole.message());
         }
 
         log.debug("用户 {} 权限检查通过，角色: {}", userId, currentRoles);

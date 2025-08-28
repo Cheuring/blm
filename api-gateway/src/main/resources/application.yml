@@ -4,15 +4,18 @@ server:
 spring:
   application:
     name: api-gateway
+  config:
+    import:
+      - optional:nacos:application-${spring.application.name}.yml
   cloud:
     nacos:
       discovery:
         server-addr: localhost:8848
         namespace: blm-microservices
-      config:
-        server-addr: localhost:8848
-        namespace: blm-microservices
-        file-extension: yml
+#      config:
+#        server-addr: localhost:8848
+#        namespace: blm-microservices
+#        file-extension: yml
     gateway:
       discovery:
         locator:
@@ -67,6 +70,50 @@ spring:
           filters:
             - StripPrefix=0
 
+        # Swagger UI 路由
+        - id: swagger-ui
+          uri: lb://auth-center
+          predicates:
+            - Path=/swagger-ui.html,/swagger-ui/**,/v3/api-docs/**
+          filters:
+            - StripPrefix=0
+
+        # 各服务的 OpenAPI 文档路由
+        - id: auth-center-docs
+          uri: lb://auth-center
+          predicates:
+            - Path=/v3/api-docs/auth-center
+          filters:
+            - RewritePath=/v3/api-docs/auth-center, /v3/api-docs
+
+        - id: user-service-docs
+          uri: lb://user-service
+          predicates:
+            - Path=/v3/api-docs/user-service
+          filters:
+            - RewritePath=/v3/api-docs/user-service, /v3/api-docs
+
+        - id: order-service-docs
+          uri: lb://order-service
+          predicates:
+            - Path=/v3/api-docs/order-service
+          filters:
+            - RewritePath=/v3/api-docs/order-service, /v3/api-docs
+
+        - id: store-service-docs
+          uri: lb://store-service
+          predicates:
+            - Path=/v3/api-docs/store-service
+          filters:
+            - RewritePath=/v3/api-docs/store-service, /v3/api-docs
+
+        - id: rider-service-docs
+          uri: lb://rider-service
+          predicates:
+            - Path=/v3/api-docs/rider-service
+          filters:
+            - RewritePath=/v3/api-docs/rider-service, /v3/api-docs
+
       globalcors:
         cors-configurations:
           '[/**]':
@@ -76,23 +123,43 @@ spring:
             allowCredentials: true
 
   # Redis配置
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      database: 0
-      password: 
-      timeout: 3000ms
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
+#  data:
+#    redis:
+#      host: localhost
+#      port: 6379
+#      database: 0
+#      password:
+#      timeout: 3000ms
+#      lettuce:
+#        pool:
+#          max-active: 8
+#          max-idle: 8
+#          min-idle: 0
+  main:
+    web-application-type: reactive
 
 # JWT配置
 jwt:
   secret: blm-takeout-secret-key-for-jwt-token-generation-and-validation-2025
   token-expiration: P1D
+
+# OpenAPI 配置
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: 认证中心
+        url: /v3/api-docs/auth-center
+      - name: 用户服务  
+        url: /v3/api-docs/user-service
+      - name: 订单服务
+        url: /v3/api-docs/order-service  
+      - name: 商店服务
+        url: /v3/api-docs/store-service
+      - name: 骑手服务
+        url: /v3/api-docs/rider-service
 
 # 监控配置
 management:

@@ -27,7 +27,7 @@ public class UserController {
     @Operation(summary = "获取当前用户个人资料", description = "获取当前登录用户的详细信息")
     @ApiResponse(responseCode = "200", description = "获取成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserVO.class)))
     @GetMapping("/profile")
-    public Result<UserVO> getProfile(@RequestHeader("X-User-Id") String userId) {
+    public Result<UserVO> getProfile(@RequestHeader("X-User-Id") Long userId) {
         UserVO vo = userService.getUserProfile(userId);
         return Result.success(vo);
     }
@@ -35,7 +35,7 @@ public class UserController {
     @Operation(summary = "更新当前用户个人资料", description = "更新当前登录用户的用户名、邮箱或头像")
     @ApiResponse(responseCode = "200", description = "更新成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserVO.class)))
     @PutMapping("/profile")
-    public Result<UserVO> updateProfile(@RequestHeader("X-User-Id") String userId,
+    public Result<UserVO> updateProfile(@RequestHeader("X-User-Id") Long userId,
                                         @RequestBody(description = "要更新的用户信息", required = true, content = @Content(schema = @Schema(implementation = UserProfileUpdateDTO.class))) @org.springframework.web.bind.annotation.RequestBody UserProfileUpdateDTO dto) {
         UserVO vo = userService.updateUserProfile(userId, dto);
         return Result.success(vo);
@@ -44,7 +44,7 @@ public class UserController {
     @Operation(summary = "更新当前用户密码", description = "更新当前登录用户的密码")
     @ApiResponse(responseCode = "200", description = "密码更新成功")
     @PutMapping("/password")
-    public Result<Void> updatePassword(@RequestHeader("X-User-Id") String userId,
+    public Result<Void> updatePassword(@RequestHeader("X-User-Id") Long userId,
                                        @RequestBody(description = "密码更新信息", required = true, content = @Content(schema = @Schema(implementation = PasswordUpdateDTO.class))) @org.springframework.web.bind.annotation.RequestBody PasswordUpdateDTO dto) {
         userService.updateUserPassword(userId, dto);
         return Result.success(null);

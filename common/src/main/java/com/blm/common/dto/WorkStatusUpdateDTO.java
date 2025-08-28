@@ -1,6 +1,6 @@
 package com.blm.common.dto;
 
-import com.blm.entity.Rider;
+import com.blm.common.entity.Rider;
 import lombok.Data;
 
 @Data

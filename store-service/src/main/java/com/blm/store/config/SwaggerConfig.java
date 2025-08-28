@@ -1,4 +1,4 @@
-package com.blm.order.config;
+package com.blm.store.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -9,21 +9,24 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+/**
+ * Swagger/OpenAPI 配置
+ */
 @Configuration
 public class SwaggerConfig {
-    
+
     @Bean
-    public OpenAPI orderServiceOpenAPI() {
+    public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("订单服务 API")
-                        .description("订单管理、订单项管理等相关接口")
+                        .title("商店服务 API")
+                        .description("商店管理、菜品管理、促销活动等相关接口")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("BLM Team")
                                 .email("support@blm.com")))
                 .servers(List.of(
-                        new Server().url("http://localhost:8083").description("本地开发环境"),
+                        new Server().url("http://localhost:8084").description("本地开发环境"),
                         new Server().url("http://localhost:8080").description("网关环境")
                 ));
     }

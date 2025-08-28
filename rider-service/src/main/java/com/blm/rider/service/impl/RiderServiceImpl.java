@@ -1,282 +1,381 @@
 package com.blm.rider.service.impl;
 
 import com.blm.common.dto.LocationUpdateDTO;
+import com.blm.common.dto.OrderStatusUpdateDTO;
 import com.blm.common.dto.RiderRegisterDTO;
 import com.blm.common.dto.WorkStatusUpdateDTO;
-import com.blm.common.entity.Rider;
-import com.blm.common.entity.RiderStats;
+import com.blm.common.entity.*;
 import com.blm.common.exception.BusinessException;
+import com.blm.common.exception.CommonException;
 import com.blm.common.feign.OrderServiceClient;
+import com.blm.common.feign.StoreServiceClient;
 import com.blm.common.feign.UserServiceClient;
-import com.blm.common.result.Result;
+import com.blm.common.result.ExceptionConstant;
+import com.blm.common.service.BaseService;
 import com.blm.common.vo.RiderOrderVO;
 import com.blm.common.vo.RiderStatsVO;
-import com.blm.common.vo.RiderVO;
-import com.blm.common.vo.UserVO;
 import com.blm.rider.repository.RiderRepository;
 import com.blm.rider.repository.RiderStatsRepository;
 import com.blm.rider.service.RiderService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
+import java.time.temporal.WeekFields;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Locale;
+import java.util.Map;
 
-/**
- * 骑手服务实现类
- */
-@Slf4j
 @Service
-@RequiredArgsConstructor
-public class RiderServiceImpl implements RiderService {
+public class RiderServiceImpl extends BaseService implements RiderService {
 
-    private final RiderRepository riderRepository;
-    private final RiderStatsRepository riderStatsRepository;
-    private final OrderServiceClient orderServiceClient;
-    private final UserServiceClient userServiceClient;
+    @Autowired
+    private RiderRepository riderRepository;
+
+    @Autowired
+    private RiderStatsRepository riderStatsRepository;
+
+    @Autowired
+    private UserServiceClient userService;
+
+    @Autowired
+    private StoreServiceClient storeService;
+
+    @Autowired
+    private OrderServiceClient orderService;
 
     @Override
     @Transactional
     public void registerRider(Long userId, RiderRegisterDTO dto) {
-        // 检查用户是否已经是骑手
-        Optional<Rider> existingRider = riderRepository.findByUserId(userId);
-        if (existingRider.isPresent()) {
-            throw new BusinessException("用户已经是骑手");
+        if (riderRepository.findByUserId(userId).isPresent()) {
+            throw new CommonException(ExceptionConstant.RIDER_ALREADY_EXISTS);
         }
 
-        // 验证用户存在
-        Result<UserVO> userResult = userServiceClient.getUserById(userId);
-        if (!userResult.isSuccess() || userResult.getData() == null) {
-            throw new BusinessException("用户不存在");
-        }
+        User user = userService.getUserById(userId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.USER_NOT_FOUND));
 
-        // 创建骑手记录
         Rider rider = new Rider();
         BeanUtils.copyProperties(dto, rider);
         rider.setUserId(userId);
-        rider.setStatus(Rider.RiderStatus.OFFLINE); // 默认离线状态
+        rider.setStatus(Rider.RiderStatus.OFFLINE); // 默认下线
+        rider.setLongitude(null);
+        rider.setLatitude(null);
         rider.setCreatedAt(LocalDateTime.now());
         rider.setUpdatedAt(LocalDateTime.now());
-
         riderRepository.insert(rider);
-        log.info("用户 {} 注册成为骑手成功", userId);
+
+        // 更新用户角色
+        userService.updateRole(userId, user.getRole() + "," + User.UserRole.RIDER);
     }
 
     @Override
     @Transactional
     public void updateWorkStatus(Long userId, WorkStatusUpdateDTO dto) {
-        Rider rider = _getRiderByUserId(userId);
-        rider.setStatus(dto.getStatus());
-        rider.setUpdatedAt(LocalDateTime.now());
-        
-        riderRepository.updateStatus(rider.getId(), dto.getStatus(), LocalDateTime.now());
-        log.info("骑手 {} 更新工作状态为 {}", userId, dto.getStatus());
+        riderRepository.findByUserId(userId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.RIDER_NOT_FOUND));
+        if (riderRepository.updateWorkStatus(userId, dto.getWorkStatus(), LocalDateTime.now()) != 1) {
+            throw new CommonException(ExceptionConstant.SYS_DATABASE_ERROR);
+        }
+    }
+
+    @Override
+    public Rider.RiderStatus getWorkStatus(Long userId) {
+        return riderRepository.findByUserId(userId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.RIDER_NOT_FOUND))
+                .getStatus();
     }
 
     @Override
     @Transactional
-    public void updateLocation(Long userId, LocationUpdateDTO dto) {
-        Rider rider = _getRiderByUserId(userId);
-        
-        riderRepository.updateLocation(rider.getId(), dto.getLongitude(), dto.getLatitude(), LocalDateTime.now());
-        log.info("骑手 {} 更新位置为 ({}, {})", userId, dto.getLongitude(), dto.getLatitude());
+    public Long updateLocation(Long userId, LocationUpdateDTO dto) {
+        Rider rider = riderRepository.findByUserId(userId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.RIDER_NOT_FOUND));
+        if (riderRepository.updateLocation(userId, dto.getLongitude(), dto.getLatitude(), LocalDateTime.now()) != 1) {
+            throw new CommonException(ExceptionConstant.SYS_DATABASE_ERROR);
+        }
+
+        // todo: websocket通知用户其骑手位置已更新
+//        List<Order> orders = orderRepository.findByRiderId(userId);
+//        for (Order order : orders) {
+//            Map<String, Object> content = Map.of(
+//                    "orderId", order.getId(),
+//                    "orderNo", order.getOrderNo(),
+//                    "riderAddress", dto
+//            );
+//            WebSocketHandler.notify(order.getUserId(), Message.MessageType.USER_RIDER_ADDR_UPDATE, content);
+//            redisUtil.clearCacheEx(CacheConstant.RIDER_LOCATION, order.getId());
+//        }
+
+        return rider.getId();
     }
 
     @Override
-    public List<RiderOrderVO> getAvailableOrders(Long userId) {
-        // 验证骑手存在且状态为在线
-        Rider rider = _getRiderByUserId(userId);
-        if (!Rider.RiderStatus.ONLINE.equals(rider.getStatus())) {
-            throw new BusinessException("骑手不在线，无法查看可接订单");
-        }
-
-        // 调用订单服务获取可接订单
-        Result<List<RiderOrderVO>> result = orderServiceClient.getAvailableOrders();
-        if (result.isSuccess()) {
-            return result.getData();
-        } else {
-            throw new BusinessException("获取可接订单失败: " + result.getMessage());
-        }
+    public List<RiderOrderVO> listAvailableOrders() {
+        List<Order> orders = orderService.getAvailableOrders()
+                .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
+        return getRiderOrderVOS(orders);
     }
 
     @Override
-    public List<RiderOrderVO> getMyOrders(Long userId) {
-        Rider rider = _getRiderByUserId(userId);
-        
-        // 调用订单服务获取骑手订单
-        Result<List<RiderOrderVO>> result = orderServiceClient.getRiderOrders(rider.getId());
-        if (result.isSuccess()) {
-            return result.getData();
-        } else {
-            throw new BusinessException("获取订单列表失败: " + result.getMessage());
+    public List<RiderOrderVO> listMyOrders(Long userId) {
+        Rider rider = riderRepository.findByUserId(userId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.RIDER_NOT_FOUND));
+        List<Order> orders = orderService.getOrdersByRiderId(rider.getId())
+                .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
+        return getRiderOrderVOS(orders);
+    }
+
+    private List<RiderOrderVO> getRiderOrderVOS(List<Order> orders) {
+        List<RiderOrderVO> result = new ArrayList<>();
+        if (orders == null || orders.isEmpty()) {
+            return result;
         }
+
+        for (Order order : orders) {
+            Store store = storeService.getStoreById(order.getStoreId())
+                    .orElseThrow(() -> new CommonException(ExceptionConstant.STORE_NOT_FOUND));
+            UserAddress userAddress = userService.getAddressById(order.getAddressId())
+                    .orElseThrow(() -> new CommonException(ExceptionConstant.USER_ADDRESS_NOT_FOUND));
+
+            RiderOrderVO vo = RiderOrderVO.builder()
+                    .id(order.getId())
+                    .orderNo(order.getOrderNo())
+                    .orderStatus(order.getStatus())
+                    .storeId(order.getStoreId())
+                    .storeName(store.getName())
+                    .storeImage(store.getLogo())
+                    .storeAddress(store.getAddress())
+                    .userId(order.getUserId())
+                    .userName(userAddress.getReceiver())
+                    .userAddress(userAddress.toString())
+                    .deliveryFee(order.getDeliveryFee())
+                    .paymentAmount(order.getPaymentAmount())
+                    .createdAt(order.getCreatedAt())
+                    .build();
+
+            result.add(vo);
+        }
+        return result;
     }
 
     @Override
     @Transactional
     public void acceptOrder(Long userId, Long orderId) {
-        Rider rider = _getRiderByUserId(userId);
-        
-        // 检查骑手状态
-        if (!Rider.RiderStatus.ONLINE.equals(rider.getStatus())) {
-            throw new BusinessException("骑手不在线，无法接单");
+        Rider rider = riderRepository.findByUserId(userId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.RIDER_NOT_FOUND));
+        User user = userService.getUserById(rider.getId())
+                .orElseThrow(() -> new CommonException(ExceptionConstant.USER_NOT_FOUND));
+        // 检查骑手工作状态
+        if (!rider.getStatus().equals(Rider.RiderStatus.ONLINE)) {
+            throw new CommonException(ExceptionConstant.RIDER_STATUS_ERROR);
         }
 
-        // 调用订单服务接单
-        Result<Void> result = orderServiceClient.acceptOrder(orderId, rider.getId());
-        if (!result.isSuccess()) {
-            throw new BusinessException("接单失败: " + result.getMessage());
+        Order order = orderService.getOrderById(orderId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.ORDER_NOT_FOUND));
+
+        int updated = orderService.assignRiderToOrder(orderId, rider.getId());
+        if (updated != 1) {
+            throw new CommonException(ExceptionConstant.RIDER_ASSIGN_FAILED);
         }
-        
-        log.info("骑手 {} 接受订单 {} 成功", userId, orderId);
+
+        Map<String, Object> content = Map.of(
+                "orderId", order.getId(),
+                "orderNo", order.getOrderNo(),
+                "rider", Map.of(
+                        "id", rider.getId(),
+                        "name", rider.getRealName(),
+                        "phone", user.getPhone()
+                )
+        );
+        // todo: websocket通知用户其订单已被骑手接单
+//        WebSocketHandler.notify(order.getUserId(), Message.MessageType.USER_ORDER_ACCEPTED, content);
     }
 
     @Override
     @Transactional
     public void pickupOrder(Long userId, Long orderId) {
-        Rider rider = _getRiderByUserId(userId);
-        
-        // 调用订单服务取餐
-        Result<Void> result = orderServiceClient.pickupOrder(orderId, rider.getId());
-        if (!result.isSuccess()) {
-            throw new BusinessException("取餐失败: " + result.getMessage());
+        Rider rider = riderRepository.findByUserId(userId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.RIDER_NOT_FOUND));
+
+        // 检查订单状态转换是否合法
+        Order order = orderService.getOrderById(orderId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.ORDER_NOT_FOUND));
+
+        if (order.getRiderId() == null || !order.getRiderId().equals(rider.getId())) {
+            throw new CommonException(ExceptionConstant.ORDER_UNAUTHORIZED);
         }
-        
-        log.info("骑手 {} 取餐订单 {} 成功", userId, orderId);
+
+        // 验证状态转换的合法性
+        if (!Order.OrderStatus.RIDER_ASSIGNED.equals(order.getStatus())) {
+            throw new CommonException(ExceptionConstant.ORDER_STATUS_ERROR);
+        }
+
+        // 更新订单状态为已取餐，开始配送
+        int updated = orderService.updateOrderStatusByRider(orderId, rider.getId(), Order.OrderStatus.FOOD_PICKED);
+        if (updated != 1) {
+            throw new CommonException(ExceptionConstant.SYS_DATABASE_ERROR);
+        }
+
+        Map<String, Object> content = Map.of(
+                "orderId", order.getId(),
+                "orderNo", order.getOrderNo(),
+                "riderAddress", Map.of(
+                        "longitude", rider.getLongitude(),
+                        "latitude", rider.getLatitude()
+                )
+        );
+
+        // todo: websocket通知用户其订单已被骑手取餐
+//        WebSocketHandler.notify(order.getUserId(), Message.MessageType.USER_ORDER_PICKED, content);
     }
 
     @Override
     @Transactional
-    public void completeDelivery(Long userId, Long orderId) {
-        Rider rider = _getRiderByUserId(userId);
-        
-        // 调用订单服务完成配送
-        Result<Void> result = orderServiceClient.completeDelivery(orderId, rider.getId());
-        if (!result.isSuccess()) {
-            throw new BusinessException("完成配送失败: " + result.getMessage());
+    public void delivered(Long userId, Long orderId) {
+        Rider rider = riderRepository.findByUserId(userId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.RIDER_NOT_FOUND));
+
+        // 检查订单状态转换是否合法
+        Order order = orderService.getOrderById(orderId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.ORDER_NOT_FOUND));
+
+        if (order.getRiderId() == null || !order.getRiderId().equals(rider.getId())) {
+            throw new CommonException(ExceptionConstant.ORDER_UNAUTHORIZED);
         }
-        
-        log.info("骑手 {} 完成配送订单 {} 成功", userId, orderId);
-        
-        // 更新统计数据
-        updateRiderStats(rider.getId(), LocalDate.now());
+
+        // 确保订单当前状态是配送中
+        if (!Order.OrderStatus.FOOD_PICKED.equals(order.getStatus())) {
+            throw new CommonException(ExceptionConstant.ORDER_STATUS_ERROR);
+        }
+
+        int updated = orderService.updateOrderStatusByRider(orderId, rider.getId(), Order.OrderStatus.DELIVERED);
+        if (updated != 1) {
+            throw new CommonException(ExceptionConstant.SYS_DATABASE_ERROR);
+        }
+
+        Map<String, Object> content = Map.of(
+                "orderId", order.getId(),
+                "orderNo", order.getOrderNo(),
+                "riderAddress", Map.of(
+                        "longitude", rider.getLongitude(),
+                        "latitude", rider.getLatitude()
+                )
+        );
+
+        // todo: websocket通知用户其订单已被骑手送达
+//        WebSocketHandler.notify(order.getUserId(), Message.MessageType.USER_ORDER_DELIVERED, content);
+
+        // 更新当日统计数据
+        updateRiderDailyStats(rider.getId());
+    }
+
+    /**
+     * 更新骑手当日统计数据
+     *
+     * @param riderId 骑手ID
+     */
+    private void updateRiderDailyStats(Long riderId) {
+        LocalDate today = LocalDate.now();
+
+        // 获取今日已送达订单数量
+        List<Order> completedOrders = orderService.getOrdersByRiderIdAndStatusByTime(riderId, Order.OrderStatus.COMPLETED, today)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
+
+        // 计算总收入和平均配送时间
+        BigDecimal totalIncome = BigDecimal.ZERO;
+        BigDecimal totalMinutes = BigDecimal.ZERO;
+
+        for (Order order : completedOrders) {
+            // 假设骑手每单有固定收入
+            totalIncome = totalIncome.add(new BigDecimal("5.00"));
+
+            // 计算配送时间（从接单到送达）
+            if (order.getActualTime() != null && order.getCreatedAt() != null) {
+                long minutes = java.time.Duration.between(order.getCreatedAt(), order.getActualTime()).toMinutes();
+                totalMinutes = totalMinutes.add(new BigDecimal(minutes));
+            }
+        }
+
+        // 计算平均配送时间
+        BigDecimal avgDeliveryTime = completedOrders.isEmpty() ? BigDecimal.ZERO :
+                totalMinutes.divide(new BigDecimal(completedOrders.size()), 2, RoundingMode.HALF_UP);
+
+        // 获取今日取消订单数量
+        List<Order> canceledOrders = orderService.getOrdersByRiderIdAndStatusByTime(riderId, Order.OrderStatus.CANCELLED, today)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
+
+        // 更新骑手统计数据
+        RiderStats stats = new RiderStats();
+        stats.setRiderId(riderId);
+        stats.setDate(today);
+        stats.setOrdersCount(completedOrders.size() + canceledOrders.size());
+        stats.setCompletedOrders(completedOrders.size());
+        stats.setCanceledOrders(canceledOrders.size());
+        stats.setTotalIncome(totalIncome);
+//        stats.setAvgDeliveryTime(avgDeliveryTime);
+        stats.setCreatedAt(LocalDateTime.now());
+        stats.setUpdatedAt(LocalDateTime.now());
+
+        riderStatsRepository.insertOrUpdate(stats);
     }
 
     @Override
     public RiderStatsVO getStats(Long userId, String period) {
-        Rider rider = _getRiderByUserId(userId);
-        
-        LocalDate endDate = LocalDate.now();
+        Rider rider = riderRepository.findByUserId(userId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.RIDER_NOT_FOUND));
+
+        LocalDate today = LocalDate.now();
         LocalDate startDate;
-        
+        LocalDate endDate = today;
+
+        // 根据统计周期确定开始日期
         switch (period) {
+            case "day":
+                startDate = today;
+                break;
             case "week":
-                startDate = endDate.minusDays(7);
+                // 获取本周的第一天（星期一）
+                startDate = today.with(WeekFields.of(Locale.getDefault()).dayOfWeek(), 1);
                 break;
             case "month":
-                startDate = endDate.minusDays(30);
+                // 获取本月的第一天
+                startDate = today.with(TemporalAdjusters.firstDayOfMonth());
                 break;
-            default: // day
-                startDate = endDate;
-                break;
+            default:
+                throw BusinessException.of(400, "无效的统计周期");
         }
-        
-        List<RiderStats> statsList = riderStatsRepository.findByRiderIdAndDateRange(
-            rider.getId(), startDate, endDate);
-        
-        // 聚合统计数据
+
+        // 查询统计数据
+        Integer ordersCount = riderStatsRepository.countOrdersByRiderIdAndDateRange(rider.getId(), startDate, endDate);
+        Integer completedOrders = riderStatsRepository.countCompletedOrdersByRiderIdAndDateRange(rider.getId(), startDate, endDate);
+        Integer canceledOrders = riderStatsRepository.countCanceledOrdersByRiderIdAndDateRange(rider.getId(), startDate, endDate);
+        BigDecimal totalIncome = riderStatsRepository.sumIncomeByRiderIdAndDateRange(rider.getId(), startDate, endDate);
+
+        // 计算完成率
+        BigDecimal completionRate = BigDecimal.ZERO;
+        if (ordersCount > 0) {
+            completionRate = new BigDecimal(completedOrders)
+                    .multiply(new BigDecimal("100"))
+                    .divide(new BigDecimal(ordersCount), 2, RoundingMode.HALF_UP);
+        }
+
+        // 构建返回对象
         RiderStatsVO statsVO = new RiderStatsVO();
-        statsVO.setDate(endDate);
-        
-        int totalOrders = 0;
-        int completedOrders = 0;
-        int canceledOrders = 0;
-        BigDecimal totalIncome = BigDecimal.ZERO;
-        
-        for (RiderStats stats : statsList) {
-            totalOrders += stats.getOrdersCount();
-            completedOrders += stats.getCompletedOrders();
-            canceledOrders += stats.getCanceledOrders();
-            totalIncome = totalIncome.add(stats.getTotalIncome());
-        }
-        
-        statsVO.setOrdersCount(totalOrders);
+        statsVO.setStartDate(startDate);
+        statsVO.setEndDate(endDate);
+        statsVO.setOrdersCount(ordersCount);
         statsVO.setCompletedOrders(completedOrders);
         statsVO.setCanceledOrders(canceledOrders);
         statsVO.setTotalIncome(totalIncome);
-        
-        // 计算完成率
-        if (totalOrders > 0) {
-            BigDecimal completionRate = BigDecimal.valueOf(completedOrders)
-                .divide(BigDecimal.valueOf(totalOrders), 2, BigDecimal.ROUND_HALF_UP);
-            statsVO.setCompletionRate(completionRate);
-        } else {
-            statsVO.setCompletionRate(BigDecimal.ZERO);
-        }
-        
+        statsVO.setCompletionRate(completionRate);
+
         return statsVO;
-    }
-
-    @Override
-    public RiderVO getRiderById(Long riderId) {
-        Optional<Rider> riderOpt = riderRepository.findById(riderId);
-        if (!riderOpt.isPresent()) {
-            throw new BusinessException("骑手不存在");
-        }
-        
-        RiderVO riderVO = new RiderVO();
-        BeanUtils.copyProperties(riderOpt.get(), riderVO);
-        return riderVO;
-    }
-
-    @Override
-    public RiderVO getRiderByUserId(Long userId) {
-        Optional<Rider> riderOpt = riderRepository.findByUserId(userId);
-        if (!riderOpt.isPresent()) {
-            throw new BusinessException("用户不是骑手");
-        }
-        
-        RiderVO riderVO = new RiderVO();
-        BeanUtils.copyProperties(riderOpt.get(), riderVO);
-        return riderVO;
-    }
-
-    /**
-     * 获取骑手实体（内部方法）
-     */
-    private Rider _getRiderByUserId(Long userId) {
-        return riderRepository.findByUserId(userId)
-            .orElseThrow(() -> new BusinessException("用户不是骑手"));
-    }
-
-    /**
-     * 更新骑手统计数据
-     */
-    private void updateRiderStats(Long riderId, LocalDate date) {
-        Optional<RiderStats> existingStats = riderStatsRepository.findByRiderIdAndDate(riderId, date);
-        
-        RiderStats stats;
-        if (existingStats.isPresent()) {
-            stats = existingStats.get();
-            stats.setCompletedOrders(stats.getCompletedOrders() + 1);
-        } else {
-            stats = new RiderStats();
-            stats.setRiderId(riderId);
-            stats.setDate(date);
-            stats.setOrdersCount(1);
-            stats.setCompletedOrders(1);
-            stats.setCanceledOrders(0);
-            stats.setTotalIncome(BigDecimal.ZERO); // 这里应该根据实际业务逻辑计算收入
-            stats.setCreatedAt(LocalDateTime.now());
-        }
-        
-        stats.setUpdatedAt(LocalDateTime.now());
-        riderStatsRepository.save(stats);
     }
 }

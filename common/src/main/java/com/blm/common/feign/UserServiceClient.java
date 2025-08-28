@@ -7,6 +7,7 @@ import com.blm.common.vo.UserVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -35,4 +36,7 @@ public interface UserServiceClient {
 
     @GetMapping("/address/{Id}")
     Optional<UserAddress> getAddressById(@PathVariable("Id") Long Id);
+
+    @PutMapping("/{userId}/role")
+    int updateRole(@PathVariable("userId") Long userId, @RequestParam("role") String role);
 }

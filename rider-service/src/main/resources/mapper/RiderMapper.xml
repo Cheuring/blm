@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blm.repository.RiderRepository">
+    <!-- 根据状态和关键字查询骑手列表（支持PageHelper） -->
+    <select id="findByStatusAndKeyword" resultType="com.blm.entity.Rider">
+        SELECT * FROM rider
+        WHERE 1=1
+        <if test="status != null">AND status = #{status}</if>
+        <if test="keyword != null and keyword != ''">
+            AND (real_name LIKE CONCAT('%',#{keyword},'%')
+        </if>
+        ORDER BY created_at DESC
+    </select>
+    
+    <!-- 保存骑手信息（插入或更新） -->
+    <insert id="save" parameterType="com.blm.entity.Rider" useGeneratedKeys="true" keyProperty="id">
+        <if test="id == null">
+            INSERT INTO rider(
+                user_id, real_name, id_card, id_card_front, id_card_back, 
+                vehicle_type, vehicle_number, status, longitude,
+                latitude, created_at, updated_at
+            ) VALUES (
+                #{userId}, #{realName}, #{idCard}, #{idCardFront}, #{idCardBack}, 
+                #{vehicleType}, #{vehicleNumber}, #{status}, #{longitude},
+                #{latitude}, #{createdAt}, #{updatedAt}
+            )
+        </if>
+        <if test="id != null">
+            UPDATE rider SET
+                <if test="userId != null">user_id = #{userId},</if>
+                <if test="realName != null">real_name = #{realName},</if>
+                <if test="idCard != null">id_card = #{idCard},</if>
+                <if test="idCardFront != null">id_card_front = #{idCardFront},</if>
+                <if test="idCardBack != null">id_card_back = #{idCardBack},</if>
+                <if test="vehicleType != null">vehicle_type = #{vehicleType},</if>
+                <if test="vehicleNumber != null">vehicle_number = #{vehicleNumber},</if>
+                <if test="status != null">status = #{status},</if>
+                <if test="longitude != null">longitude = #{longitude},</if>
+                <if test="latitude != null">latitude = #{latitude},</if>
+                updated_at = #{updatedAt}
+            WHERE id = #{id}
+        </if>
+    </insert>
+</mapper>

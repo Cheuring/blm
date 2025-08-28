@@ -1,27 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.blm.rider.repository.RiderStatsRepository">
+<mapper namespace="com.blm.repository.RiderStatsRepository">
+    <!-- 根据骑手ID和日期范围查询统计数据 -->
+    <select id="findByRiderIdAndDateRange" resultType="com.blm.entity.RiderStats">
+        SELECT * FROM rider_stats 
+        WHERE rider_id = #{riderId} 
+        AND date BETWEEN #{startDate} AND #{endDate}
+    </select>
     
-    <!-- 保存或更新骑手统计数据 -->
-    <insert id="save" parameterType="com.blm.common.entity.RiderStats" useGeneratedKeys="true" keyProperty="id">
-        <if test="id == null">
-            INSERT INTO rider_stats(
-                rider_id, date, orders_count, completed_orders, canceled_orders, 
-                total_income, created_at, updated_at
-            ) VALUES (
-                #{riderId}, #{date}, #{ordersCount}, #{completedOrders}, #{canceledOrders}, 
-                #{totalIncome}, #{createdAt}, #{updatedAt}
-            )
-        </if>
-        <if test="id != null">
-            UPDATE rider_stats SET
-                orders_count = #{ordersCount},
-                completed_orders = #{completedOrders},
-                canceled_orders = #{canceledOrders},
-                total_income = #{totalIncome},
-                updated_at = #{updatedAt}
-            WHERE id = #{id}
-        </if>
+    <!-- 根据骑手ID和日期查询统计数据 -->
+    <select id="findByRiderIdAndDate" resultType="com.blm.entity.RiderStats">
+        SELECT * FROM rider_stats 
+        WHERE rider_id = #{riderId} 
+        AND date = #{date}
+    </select>
+    
+    <!-- 插入或更新统计数据 -->
+    <insert id="insertOrUpdate" parameterType="com.blm.entity.RiderStats">
+        INSERT INTO rider_stats(
+            rider_id, date, orders_count, completed_orders, canceled_orders, 
+            total_income, created_at, updated_at
+        ) VALUES (
+            #{riderId}, #{date}, #{ordersCount}, #{completedOrders}, #{canceledOrders}, 
+            #{totalIncome}, #{createdAt}, #{updatedAt}
+        ) ON DUPLICATE KEY UPDATE 
+            orders_count = #{ordersCount}, 
+            completed_orders = #{completedOrders}, 
+            canceled_orders = #{canceledOrders}, 
+            total_income = #{totalIncome}, 
+            updated_at = #{updatedAt}
     </insert>
     
+    <!-- 查询骑手指定日期范围内的订单总数 -->
+    <select id="countOrdersByRiderIdAndDateRange" resultType="java.lang.Integer">
+        SELECT COALESCE(SUM(orders_count), 0) 
+        FROM rider_stats 
+        WHERE rider_id = #{riderId} 
+        AND date BETWEEN #{startDate} AND #{endDate}
+    </select>
+    
+    <!-- 查询骑手指定日期范围内的已完成订单总数 -->
+    <select id="countCompletedOrdersByRiderIdAndDateRange" resultType="java.lang.Integer">
+        SELECT COALESCE(SUM(completed_orders), 0) 
+        FROM rider_stats 
+        WHERE rider_id = #{riderId} 
+        AND date BETWEEN #{startDate} AND #{endDate}
+    </select>
+    
+    <!-- 查询骑手指定日期范围内的已取消订单总数 -->
+    <select id="countCanceledOrdersByRiderIdAndDateRange" resultType="java.lang.Integer">
+        SELECT COALESCE(SUM(canceled_orders), 0) 
+        FROM rider_stats 
+        WHERE rider_id = #{riderId} 
+        AND date BETWEEN #{startDate} AND #{endDate}
+    </select>
+    
+    <!-- 查询骑手指定日期范围内的总收入 -->
+    <select id="sumIncomeByRiderIdAndDateRange" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(total_income), 0) 
+        FROM rider_stats 
+        WHERE rider_id = #{riderId} 
+        AND date BETWEEN #{startDate} AND #{endDate}
+    </select>
 </mapper>

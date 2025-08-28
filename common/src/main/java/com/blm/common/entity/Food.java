@@ -1,35 +1,19 @@
 package com.blm.common.entity;
 
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 public class Food {
-    
     public enum FoodStatus {
-        ON_SHELF("ON_SHELF", "上架"),
-        OFF_SHELF("OFF_SHELF", "下架"),
-        SUSPENDED("SUSPENDED", "已封禁"),
-        PENDING("PENDING", "待审核");
-        
-        private final String code;
-        private final String description;
-        
-        FoodStatus(String code, String description) {
-            this.code = code;
-            this.description = description;
-        }
-        
-        public String getCode() {
-            return code;
-        }
-        
-        public String getDescription() {
-            return description;
-        }
+        OFF_SHELF,
+        ON_SHELF,
+        SUSPENDED,
+        PENDING, // rejected 后修改重新提交
     }
-    
+
     private Long id;
     private Long storeId;
     private Long categoryId;
@@ -39,10 +23,9 @@ public class Food {
     private String description;
     private String image;
     private Integer sales;
-    private Integer stock;
     private FoodStatus status;
-    private String rejectReason;
-    private Boolean isFeatured;
+    private Integer isFeatured;
+    private String rejectReason; // 添加拒绝原因字段 // todo: add field
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

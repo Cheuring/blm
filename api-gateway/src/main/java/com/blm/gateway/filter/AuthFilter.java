@@ -1,5 +1,7 @@
 package com.blm.gateway.filter;
 
+import com.blm.common.entity.User;
+import com.blm.common.feign.UserServiceClient;
 import com.blm.common.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,9 @@ public class AuthFilter implements GlobalFilter, Ordered {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
+    @Autowired
+    private UserServiceClient userServiceClient;
+
     private static final String USER_ROLES_CACHE_PREFIX = "gateway:user:roles:";
 
     /**
@@ -39,11 +44,8 @@ public class AuthFilter implements GlobalFilter, Ordered {
      */
     private static final List<String> WHITE_LIST = Arrays.asList(
             "/api/auth/login",
-            "/api/auth/register", 
-            "/api/auth/refresh",
-            "/api/users/register",
-            "/api/users/login",
-            "/actuator",
+            "/api/auth/register",
+//            "/api/auth/refresh",
             "/v3/api-docs",
             "/swagger-ui"
     );
@@ -69,25 +71,22 @@ public class AuthFilter implements GlobalFilter, Ordered {
             return unauthorized(exchange.getResponse(), "Token无效或已过期");
         }
 
-        // 检查是否为访问Token
-        if (!jwtUtil.isAccessToken(token)) {
-            return unauthorized(exchange.getResponse(), "请使用访问Token");
-        }
-
         // 获取用户ID并添加到请求头
         String userId = jwtUtil.getUserIdFromToken(token);
-        if (StringUtils.hasText(userId)) {
-            // 这里需要调用用户服务获取用户角色信息
-            // 为了简化，暂时从Token中解析或使用默认值
-            // 在实际项目中，可以考虑在JWT中包含角色信息或调用用户服务
-            String userRoles = getUserRoles(userId); // 需要实现此方法
-            
-            ServerHttpRequest mutatedRequest = request.mutate()
-                    .header("X-User-Id", userId)
-                    .header("X-User-Roles", userRoles)
-                    .build();
-            exchange = exchange.mutate().request(mutatedRequest).build();
+        if (!StringUtils.hasText(userId)) {
+            return unauthorized(exchange.getResponse(), "无法解析用户信息");
         }
+
+        // 这里需要调用用户服务获取用户角色信息
+        // 为了简化，暂时从Token中解析或使用默认值
+        // 在实际项目中，可以考虑在JWT中包含角色信息或调用用户服务
+        String userRoles = getUserRoles(userId); // 需要实现此方法
+
+        ServerHttpRequest mutatedRequest = request.mutate()
+                .header("X-User-Id", userId)
+                .header("X-User-Roles", userRoles)
+                .build();
+        exchange = exchange.mutate().request(mutatedRequest).build();
 
         return chain.filter(exchange);
     }
@@ -130,19 +129,20 @@ public class AuthFilter implements GlobalFilter, Ordered {
             // 从Redis缓存获取用户角色信息
             String cacheKey = USER_ROLES_CACHE_PREFIX + userId;
             String roles = redisTemplate.opsForValue().get(cacheKey);
-            
+
             if (StringUtils.hasText(roles)) {
                 return roles;
             }
-            
+
             // 缓存未命中，返回默认角色
             // 在实际项目中，这里应该调用用户服务获取角色信息
-            String defaultRoles = "USER";
-            
+            User user = userServiceClient.getUserById(Long.valueOf(userId));
+            String userRoles = user.getRole();
+
             // 缓存用户角色信息，设置5分钟过期
-            redisTemplate.opsForValue().set(cacheKey, defaultRoles, Duration.ofMinutes(5));
-            
-            return defaultRoles;
+            redisTemplate.opsForValue().set(cacheKey, userRoles, Duration.ofMinutes(5));
+
+            return userRoles;
         } catch (Exception e) {
             log.warn("Failed to get user roles for userId: {}, error: {}", userId, e.getMessage());
             return "USER"; // 默认角色

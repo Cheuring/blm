@@ -2,6 +2,7 @@ package com.blm.common.util;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -17,41 +18,26 @@ import java.util.Map;
  */
 @Slf4j
 @Component
+@Setter
 @ConfigurationProperties(prefix = "jwt")
 public class JwtUtil {
 
     private String secret = "blm-takeout-secret-key-for-jwt-token-generation-and-validation-2024";
-    private Duration accessTokenExpiration = Duration.ofHours(2);
-    private Duration refreshTokenExpiration = Duration.ofDays(7);
-
+    private Duration tokenExpiration = Duration.ofDays(1);
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     /**
-     * 生成访问Token
-     */
-    public String generateAccessToken(String userId) {
-        return generateToken(userId, accessTokenExpiration, "access");
-    }
-
-    /**
-     * 生成刷新Token
-     */
-    public String generateRefreshToken(String userId) {
-        return generateToken(userId, refreshTokenExpiration, "refresh");
-    }
-
-    /**
      * 生成Token
      */
-    private String generateToken(String userId, Duration expiration, String type) {
+    public String generateToken(String userId) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expiration.toMillis());
+        Date expiryDate = new Date(now.getTime() + tokenExpiration.toMillis());
+        log.debug("jwt secret: {}", secret);
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
-        claims.put("type", type);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -81,22 +67,6 @@ public class JwtUtil {
             log.warn("Token validation failed: {}", e.getMessage());
             return false;
         }
-    }
-
-    /**
-     * 检查Token是否为访问Token
-     */
-    public boolean isAccessToken(String token) {
-        Claims claims = getClaimsFromToken(token);
-        return claims != null && "access".equals(claims.get("type", String.class));
-    }
-
-    /**
-     * 检查Token是否为刷新Token
-     */
-    public boolean isRefreshToken(String token) {
-        Claims claims = getClaimsFromToken(token);
-        return claims != null && "refresh".equals(claims.get("type", String.class));
     }
 
     /**
@@ -133,18 +103,5 @@ public class JwtUtil {
             return expiration.getTime() - System.currentTimeMillis();
         }
         return 0;
-    }
-
-    // Getters and Setters for configuration properties
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
-
-    public void setAccessTokenExpiration(Duration accessTokenExpiration) {
-        this.accessTokenExpiration = accessTokenExpiration;
-    }
-
-    public void setRefreshTokenExpiration(Duration refreshTokenExpiration) {
-        this.refreshTokenExpiration = refreshTokenExpiration;
     }
 }

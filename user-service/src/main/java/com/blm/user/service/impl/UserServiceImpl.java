@@ -64,27 +64,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserVO getUserById(Long userId) {
+    public User getUserById(Long userId) {
         User user = userRepository.findById(userId);
         if (user == null) {
             throw new BusinessException(ResultCode.USER_NOT_FOUND);
         }
 
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
-        return userVO;
+        return user;
     }
 
     @Override
-    public UserVO getUserByUsername(String username) {
+    public User getUserByUsername(String username) {
         User user = userRepository.findByUsername(username);
         if (user == null) {
             throw new BusinessException(ResultCode.USER_NOT_FOUND);
         }
 
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
-        return userVO;
+        return user;
     }
 
     @Override

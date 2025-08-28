@@ -1,11 +1,9 @@
 package com.blm.common.entity;
 
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
-/**
- * 用户地址实体类
- */
 @Data
 public class UserAddress {
     private Long id;

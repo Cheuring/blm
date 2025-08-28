@@ -1,35 +1,19 @@
 package com.blm.common.entity;
 
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 public class Store {
-    
     public enum StoreStatus {
-        PENDING("PENDING", "待审核"),
-        OPEN("OPEN", "营业中"),
-        CLOSED("CLOSED", "暂停营业"),
-        SUSPENDED("SUSPENDED", "已封禁");
-        
-        private final String code;
-        private final String description;
-        
-        StoreStatus(String code, String description) {
-            this.code = code;
-            this.description = description;
-        }
-        
-        public String getCode() {
-            return code;
-        }
-        
-        public String getDescription() {
-            return description;
-        }
+        OPEN,
+        CLOSED,
+        SUSPENDED, // 审核被拒，改动信息后应改为PENDING
+        PENDING, // 待审核
     }
-    
+
     private Long id;
     private Long merchantId;
     private String name;
@@ -46,11 +30,9 @@ public class Store {
     private Long categoryId;
     private StoreStatus status;
     private BigDecimal rating;
-    private Integer monthlySales;
     private String licenseImg;
     private String permitImg;
-    private String rejectReason;
-    private Boolean isFeatured;
+    private String rejectReason; // 添加拒绝原因字段
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

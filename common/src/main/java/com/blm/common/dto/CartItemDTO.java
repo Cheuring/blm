@@ -6,19 +6,17 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-@Schema(description = "购物车项目数据传输对象")
+@Schema(description = "购物车项目数据传输对象 (用于添加或更新)")
 public class CartItemDTO {
-    
     @Schema(description = "店铺ID", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "店铺ID不能为空")
-    private Long storeId;
-    
+    private Long storeId; // Need storeId to ensure cart items are from the same store
+
     @Schema(description = "商品ID", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "商品ID不能为空")
     private Long foodId;
-    
-    @Schema(description = "数量", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "1")
-    @Min(value = 1, message = "数量不能小于1")
-    @NotNull(message = "数量不能为空")
+
+    @Schema(description = "数量 (更新时使用, 添加时默认为1, 如果要添加多个则指定)", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "1")
+    @Min(1) @NotNull
     private Integer quantity;
 }

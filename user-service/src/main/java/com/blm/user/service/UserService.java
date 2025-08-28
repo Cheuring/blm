@@ -1,6 +1,9 @@
 package com.blm.user.service;
 
-import com.blm.common.dto.UserRegisterDTO;
+import com.blm.common.dto.PasswordUpdateDTO;
+import com.blm.common.dto.RegisterDTO;
+import com.blm.common.dto.UserProfileUpdateDTO;
+import com.blm.common.entity.User;
 import com.blm.common.vo.UserVO;
 
 /**
@@ -8,33 +11,15 @@ import com.blm.common.vo.UserVO;
  */
 public interface UserService {
 
-    /**
-     * 用户注册
-     */
-    UserVO register(UserRegisterDTO dto);
+    UserVO register(RegisterDTO registerDTO);
 
-    /**
-     * 根据用户ID获取用户信息
-     */
-    UserVO getUserById(Long userId);
+    UserVO getUserProfile(Long userId);
 
-    /**
-     * 根据用户名获取用户信息
-     */
-    UserVO getUserByUsername(String username);
+    UserVO updateUserProfile(Long userId, UserProfileUpdateDTO profileUpdateDTO);
 
-    /**
-     * 更新用户信息
-     */
-    UserVO updateUser(Long userId, UserRegisterDTO dto);
+    User updateUserPassword(Long userId, PasswordUpdateDTO passwordUpdateDTO);
 
-    /**
-     * 检查用户名是否存在
-     */
-    boolean existsByUsername(String username);
+    User findUserById(Long userId); // Helper method to get User entity
 
-    /**
-     * 检查邮箱是否存在
-     */
-    boolean existsByEmail(String email);
+    User findUserByUsername(String username);
 }

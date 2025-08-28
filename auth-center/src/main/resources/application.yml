@@ -30,9 +30,8 @@ spring:
 
 # JWT配置
 jwt:
-  secret: blm-takeout-secret-key-for-jwt-token-generation-and-validation-2024
-  access-token-expiration: PT2H
-  refresh-token-expiration: P7D
+  secret: blm-takeout-secret-key-for-jwt-token-generation-and-validation-2025
+  token-expiration: P1D
 
 # OpenAPI配置
 springdoc:

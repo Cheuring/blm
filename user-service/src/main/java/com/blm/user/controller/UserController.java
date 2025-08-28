@@ -1,77 +1,74 @@
 package com.blm.user.controller;
 
-import com.blm.common.dto.UserRegisterDTO;
+import com.blm.common.dto.PasswordUpdateDTO;
+import com.blm.common.dto.UserProfileUpdateDTO;
 import com.blm.common.result.Result;
 import com.blm.common.vo.UserVO;
 import com.blm.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * 用户信息控制器
- */
-@Slf4j
+@Tag(name = "用户信息管理")
 @RestController
 @RequestMapping("/api/users")
-@Tag(name = "用户管理", description = "用户相关接口")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
-    /**
-     * 用户注册
-     */
-    @Operation(summary = "用户注册", description = "新用户注册")
-    @PostMapping("/register")
-    public Result<UserVO> register(@Validated @RequestBody UserRegisterDTO dto) {
-        log.info("User registration attempt: {}", dto.getUsername());
-        UserVO userVO = userService.register(dto);
-        return Result.success("注册成功", userVO);
-    }
-
-    /**
-     * 根据用户ID获取用户信息
-     */
-    @Operation(summary = "根据ID获取用户信息", description = "根据用户ID获取用户详细信息")
-    @GetMapping("/{userId}")
-    public Result<UserVO> getUserById(@PathVariable("userId") Long userId) {
-        UserVO userVO = userService.getUserById(userId);
-        return Result.success(userVO);
-    }
-
-    /**
-     * 根据用户名获取用户信息
-     */
-    @Operation(summary = "根据用户名获取用户信息", description = "根据用户名获取用户详细信息")
-    @GetMapping("/username/{username}")
-    public Result<UserVO> getUserByUsername(@PathVariable("username") String username) {
-        UserVO userVO = userService.getUserByUsername(username);
-        return Result.success(userVO);
-    }
-
-    /**
-     * 获取当前用户个人资料
-     */
-    @Operation(summary = "获取当前用户资料", description = "获取当前登录用户的详细信息")
+    @Operation(summary = "获取当前用户个人资料", description = "获取当前登录用户的详细信息")
+    @ApiResponse(responseCode = "200", description = "获取成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserVO.class)))
     @GetMapping("/profile")
     public Result<UserVO> getProfile(@RequestHeader("X-User-Id") String userId) {
-        UserVO userVO = userService.getUserById(Long.valueOf(userId));
-        return Result.success(userVO);
+        UserVO vo = userService.getUserProfile(userId);
+        return Result.success(vo);
     }
 
-    /**
-     * 更新当前用户个人资料
-     */
-    @Operation(summary = "更新用户资料", description = "更新当前登录用户的个人信息")
+    @Operation(summary = "更新当前用户个人资料", description = "更新当前登录用户的用户名、邮箱或头像")
+    @ApiResponse(responseCode = "200", description = "更新成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserVO.class)))
     @PutMapping("/profile")
     public Result<UserVO> updateProfile(@RequestHeader("X-User-Id") String userId,
-                                        @Validated @RequestBody UserRegisterDTO dto) {
-        UserVO userVO = userService.updateUser(Long.valueOf(userId), dto);
-        return Result.success("更新成功", userVO);
+                                        @RequestBody(description = "要更新的用户信息", required = true, content = @Content(schema = @Schema(implementation = UserProfileUpdateDTO.class))) @org.springframework.web.bind.annotation.RequestBody UserProfileUpdateDTO dto) {
+        UserVO vo = userService.updateUserProfile(userId, dto);
+        return Result.success(vo);
     }
+
+    @Operation(summary = "更新当前用户密码", description = "更新当前登录用户的密码")
+    @ApiResponse(responseCode = "200", description = "密码更新成功")
+    @PutMapping("/password")
+    public Result<Void> updatePassword(@RequestHeader("X-User-Id") String userId,
+                                       @RequestBody(description = "密码更新信息", required = true, content = @Content(schema = @Schema(implementation = PasswordUpdateDTO.class))) @org.springframework.web.bind.annotation.RequestBody PasswordUpdateDTO dto) {
+        userService.updateUserPassword(userId, dto);
+        return Result.success(null);
+    }
+
+    // todo: file service
+//    @Operation(summary = "上传用户头像", description = "上传当前登录用户的头像")
+//    @ApiResponse(responseCode = "200", description = "头像上传成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+//    @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public Result<String> upload(@RequestParam MultipartFile file) {
+//        Long userId = securityUtil.getCurrentUserId();
+//        return Result.success(minioUtil.uploadImages(userId, file, MinioUtil.ImageType.AVATAR));
+//    }
+//
+//    @Operation(summary = "删除url对应的图像")
+//    @ApiResponse(responseCode = "200", description = "删除成功")
+//    @DeleteMapping("/avatar")
+//    public Result<Void> deleteAvatar(
+//            @RequestBody(description = "删除的文件对应的url,不包含endpoint 例如：blm-images/preview/avatar/1234567890.jpg",
+//                    required = true,
+//                    content = @Content(schema = @Schema(implementation = FileDeleteDTO.class)))
+//            @org.springframework.web.bind.annotation.RequestBody FileDeleteDTO dto) {
+//        Long userId = securityUtil.getCurrentUserId();
+//        minioUtil.deleteUrlImage(userId, dto.getUrl());
+//        return Result.success(null);
+//    }
 }

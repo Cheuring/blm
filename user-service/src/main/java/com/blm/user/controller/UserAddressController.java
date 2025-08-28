@@ -1,102 +1,76 @@
 package com.blm.user.controller;
 
+import com.blm.common.annotation.RequireRole;
+import com.blm.common.dto.UserAddressDTO;
 import com.blm.common.result.Result;
 import com.blm.common.vo.UserAddressVO;
-import com.blm.user.dto.UserAddressDTO;
 import com.blm.user.service.UserAddressService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * 用户地址控制器
- */
-@Slf4j
+@Tag(name = "用户地址管理", description = "管理用户的收货地址")
 @RestController
-@RequestMapping("/api/users")
-@Tag(name = "用户地址管理", description = "用户地址相关接口")
+@RequestMapping("/api/addresses")
+@SecurityRequirement(name = "bearerAuth")
+@RequireRole("USER")
 public class UserAddressController {
 
     @Autowired
-    private UserAddressService userAddressService;
+    private UserAddressService addressService;
 
-    /**
-     * 获取用户地址列表
-     */
-    @Operation(summary = "获取地址列表", description = "获取用户的所有地址")
-    @GetMapping("/{userId}/addresses")
-    public Result<List<UserAddressVO>> getUserAddresses(@PathVariable("userId") Long userId) {
-        List<UserAddressVO> addresses = userAddressService.getUserAddresses(userId);
-        return Result.success(addresses);
+    @Operation(summary = "获取当前用户地址列表", description = "查询当前登录用户的所有收货地址")
+    @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json", schema = @Schema(type = "array", implementation = UserAddressVO.class)))
+    @GetMapping
+    public Result<List<UserAddressVO>> list(@RequestHeader("X-User-Id") Long userId) {
+        List<UserAddressVO> list = addressService.listAddresses(userId);
+        return Result.success(list);
     }
 
-    /**
-     * 获取当前用户地址列表
-     */
-    @Operation(summary = "获取当前用户地址列表", description = "获取当前登录用户的所有地址")
-    @GetMapping("/addresses")
-    public Result<List<UserAddressVO>> getAddresses(@RequestHeader("X-User-Id") String userId) {
-        List<UserAddressVO> addresses = userAddressService.getUserAddresses(Long.valueOf(userId));
-        return Result.success(addresses);
+    @Operation(summary = "添加新地址", description = "为当前登录用户添加一个新的收货地址")
+    @ApiResponse(responseCode = "200", description = "添加成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserAddressVO.class)))
+    @PostMapping
+    public Result<UserAddressVO> add(@RequestHeader("X-User-Id") Long userId,
+                                     @RequestBody(description = "新地址信息", required = true, content = @Content(schema = @Schema(implementation = UserAddressDTO.class))) @org.springframework.web.bind.annotation.RequestBody UserAddressDTO dto) {
+        UserAddressVO vo = addressService.addAddress(userId, dto);
+        return Result.success(vo);
     }
 
-    /**
-     * 根据地址ID获取地址信息
-     */
-    @Operation(summary = "获取地址详情", description = "根据地址ID获取地址详细信息")
-    @GetMapping("/addresses/{addressId}")
-    public Result<UserAddressVO> getAddressById(@PathVariable("addressId") Long addressId) {
-        UserAddressVO address = userAddressService.getAddressById(addressId);
-        return Result.success(address);
+    @Operation(summary = "更新地址信息", description = "更新指定ID的收货地址信息")
+    @ApiResponse(responseCode = "200", description = "更新成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserAddressVO.class)))
+    @PutMapping("/{id}")
+    public Result<UserAddressVO> update(
+            @RequestHeader("X-User-Id") Long userId,
+            @Parameter(description = "地址ID", required = true) @PathVariable Long id,
+            @RequestBody(description = "更新后的地址信息", required = true, content = @Content(schema = @Schema(implementation = UserAddressDTO.class))) @org.springframework.web.bind.annotation.RequestBody UserAddressDTO dto) {
+        UserAddressVO vo = addressService.updateAddress(userId, id, dto);
+        return Result.success(vo);
     }
 
-    /**
-     * 添加地址
-     */
-    @Operation(summary = "添加地址", description = "为当前用户添加新地址")
-    @PostMapping("/addresses")
-    public Result<UserAddressVO> addAddress(@RequestHeader("X-User-Id") String userId,
-                                            @Validated @RequestBody UserAddressDTO dto) {
-        UserAddressVO address = userAddressService.addAddress(Long.valueOf(userId), dto);
-        return Result.success("地址添加成功", address);
-    }
-
-    /**
-     * 更新地址
-     */
-    @Operation(summary = "更新地址", description = "更新用户地址信息")
-    @PutMapping("/addresses/{addressId}")
-    public Result<UserAddressVO> updateAddress(@RequestHeader("X-User-Id") String userId,
-                                               @PathVariable("addressId") Long addressId,
-                                               @Validated @RequestBody UserAddressDTO dto) {
-        UserAddressVO address = userAddressService.updateAddress(Long.valueOf(userId), addressId, dto);
-        return Result.success("地址更新成功", address);
-    }
-
-    /**
-     * 删除地址
-     */
-    @Operation(summary = "删除地址", description = "删除用户地址")
-    @DeleteMapping("/addresses/{addressId}")
-    public Result<Void> deleteAddress(@RequestHeader("X-User-Id") String userId,
-                                      @PathVariable("addressId") Long addressId) {
-        userAddressService.deleteAddress(Long.valueOf(userId), addressId);
+    @Operation(summary = "删除地址", description = "删除指定ID的收货地址")
+    @ApiResponse(responseCode = "200", description = "删除成功")
+    @DeleteMapping("/{id}")
+    public Result<Void> delete(@RequestHeader("X-User-Id") Long userId,
+                               @Parameter(description = "地址ID", required = true) @PathVariable Long id) {
+        addressService.deleteAddress(userId, id);
         return Result.success(null);
     }
 
-    /**
-     * 设置默认地址
-     */
-    @Operation(summary = "设置默认地址", description = "设置用户的默认收货地址")
-    @PostMapping("/addresses/{addressId}/default")
-    public Result<Void> setDefaultAddress(@RequestHeader("X-User-Id") String userId,
-                                          @PathVariable("addressId") Long addressId) {
-        userAddressService.setDefaultAddress(Long.valueOf(userId), addressId);
+    @Operation(summary = "设置默认地址", description = "将指定ID的地址设为当前用户的默认收货地址")
+    @ApiResponse(responseCode = "200", description = "设置成功")
+    @PostMapping("/{id}/default")
+    public Result<Void> setDefault(@RequestHeader("X-User-Id") Long userId,
+                                   @Parameter(description = "地址ID", required = true) @PathVariable Long id) {
+        addressService.setDefaultAddress(userId, id);
         return Result.success(null);
     }
 }

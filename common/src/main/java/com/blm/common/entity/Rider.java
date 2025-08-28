@@ -1,31 +1,22 @@
 package com.blm.common.entity;
 
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * 骑手实体类
- */
 @Data
 public class Rider {
-    
-    /**
-     * 骑手状态枚举
-     */
     public enum RiderStatus {
-        ONLINE,     // 在线
-        OFFLINE,    // 离线
-        SUSPENDED   // 暂停
+        ONLINE,
+        OFFLINE,
+        SUSPENDED,
     }
 
-    /**
-     * 车辆类型枚举
-     */
     public enum VehicleType {
-        BIKE,       // 自行车
-        ELECTRIC,   // 电动车
-        MOTORCYCLE  // 摩托车
+        BIKE,
+        MOTORBIKE,
+        ELECTRIC,
     }
 
     private Long id;

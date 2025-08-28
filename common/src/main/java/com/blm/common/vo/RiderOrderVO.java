@@ -1,6 +1,6 @@
 package com.blm.common.vo;
 
-import com.blm.common.entity.Order;
+import com.blm.entity.Order;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,16 +10,12 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * 骑手订单视图对象 (用于骑手端订单管理)
- */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "骑手订单视图对象")
+@Schema(description = "骑手订单视图对象 (用于骑手端订单管理)")
 public class RiderOrderVO {
-
     @Schema(description = "订单ID")
     private Long id;
 
@@ -59,9 +55,9 @@ public class RiderOrderVO {
     @Schema(description = "下单时间")
     private LocalDateTime createdAt;
 
-    @Schema(description = "预计送达时间")
-    private LocalDateTime estimatedTime;
-
-    @Schema(description = "距离（公里）")
-    private BigDecimal distance;
+    @Data
+    static class Address { // todo
+        private BigDecimal latitude;
+        private BigDecimal longitude;
+    }
 }

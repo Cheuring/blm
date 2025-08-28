@@ -1,202 +1,134 @@
 package com.blm.order.controller;
 
-import com.blm.common.annotation.RequireRole;
+
+import com.blm.common.dto.LocationUpdateDTO;
 import com.blm.common.dto.OrderCreateDTO;
 import com.blm.common.dto.PaymentDTO;
+import com.blm.common.dto.ReviewDTO;
+import com.blm.common.entity.Order;
 import com.blm.common.result.Result;
-import com.blm.common.vo.OrderDetailVO;
-import com.blm.common.vo.OrderVO;
-import com.blm.common.vo.RiderOrderVO;
+import com.blm.common.vo.*;
 import com.blm.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-@Tag(name = "订单管理", description = "订单相关接口")
+@Tag(name = "用户订单管理", description = "用户管理自己的订单")
 @RestController
 @RequestMapping("/api/orders")
-@RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class OrderController {
-    
-    private final OrderService orderService;
-    
-    @Operation(summary = "创建订单", description = "根据购物车内容创建订单")
-    @ApiResponse(responseCode = "200", description = "创建成功")
+
+    @Autowired
+    private OrderService orderService;
+
+    // Helper schema for PageVO<OrderVO>
+    private static class PageVOSchema {
+        @Schema(name = "OrderVOPage")
+        private static class OrderVOPage extends PageVO<OrderVO> {}
+    }
+
+    @Operation(summary = "创建订单", description = "根据购物车内容和用户选择的地址创建新订单")
+    @ApiResponse(responseCode = "200", description = "创建成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OrderVO.class)))
     @PostMapping
-    @RequireRole({"USER"})
-    public Result<OrderVO> createOrder(@Valid @RequestBody OrderCreateDTO dto, HttpServletRequest request) {
-        Long userId = getUserIdFromRequest(request);
+    public Result<OrderVO> createOrder(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestBody(description = "订单创建信息", required = true, content = @Content(schema = @Schema(implementation = OrderCreateDTO.class))) @Valid @org.springframework.web.bind.annotation.RequestBody OrderCreateDTO dto) {
         OrderVO order = orderService.createOrder(userId, dto);
         return Result.success(order);
     }
-    
-    @Operation(summary = "获取用户订单列表", description = "获取当前用户的订单列表")
-    @ApiResponse(responseCode = "200", description = "查询成功")
+
+    @Operation(summary = "获取用户订单列表 (分页)", description = "查询当前登录用户的订单列表，支持按状态过滤和分页")
+    @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PageVOSchema.OrderVOPage.class)))
     @GetMapping
-    @RequireRole({"USER"})
-    public Result<List<OrderVO>> getUserOrders(
-            @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
-            @Parameter(description = "每页大小", example = "10") @RequestParam(defaultValue = "10") Integer size,
-            HttpServletRequest request) {
-        Long userId = getUserIdFromRequest(request);
-        List<OrderVO> orders = orderService.getUserOrders(userId, page, size);
-        return Result.success(orders);
+    public Result<PageVO<OrderVO>> listOrders(
+            @RequestHeader("X-User-Id") Long userId,
+            @Parameter(description = "订单状态过滤 (可选)") @RequestParam(required = false) Order.OrderStatus status,
+            @Parameter(description = "页码 (从1开始)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") int size) {
+        PageVO<OrderVO> orderPage = orderService.listUserOrders(userId, status, page, size);
+        return Result.success(orderPage);
     }
-    
-    @Operation(summary = "获取订单详情", description = "获取指定订单的详细信息")
-    @ApiResponse(responseCode = "200", description = "查询成功")
-    @GetMapping("/{orderId}")
-    @RequireRole({"USER"})
+
+    @Operation(summary = "获取订单详细信息", description = "查询指定ID订单的详细信息")
+    @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OrderDetailVO.class)))
+    @GetMapping("/{id}")
     public Result<OrderDetailVO> getOrderDetail(
-            @Parameter(description = "订单ID") @PathVariable Long orderId,
-            HttpServletRequest request) {
-        Long userId = getUserIdFromRequest(request);
-        OrderDetailVO orderDetail = orderService.getOrderDetail(userId, orderId);
+            @RequestHeader("X-User-Id") Long userId,
+            @Parameter(description = "订单ID", required = true) @PathVariable Long id) {
+        OrderDetailVO orderDetail = orderService.getOrderDetail(userId, id);
         return Result.success(orderDetail);
     }
-    
-    @Operation(summary = "取消订单", description = "取消指定订单")
+
+    @Operation(summary = "取消订单", description = "用户取消尚未处理的订单")
     @ApiResponse(responseCode = "200", description = "取消成功")
-    @PutMapping("/{orderId}/cancel")
-    @RequireRole({"USER"})
+    @PutMapping("/{id}/cancel")
     public Result<Void> cancelOrder(
-            @Parameter(description = "订单ID") @PathVariable Long orderId,
-            HttpServletRequest request) {
-        Long userId = getUserIdFromRequest(request);
-        orderService.cancelOrder(userId, orderId);
-        return Result.success();
+            @RequestHeader("X-User-Id") Long userId,
+            @Parameter(description = "订单ID", required = true) @PathVariable Long id) {
+        orderService.cancelOrder(userId, id);
+        return Result.success(null);
     }
-    
-    @Operation(summary = "支付订单", description = "支付指定订单")
-    @ApiResponse(responseCode = "200", description = "支付成功")
-    @PostMapping("/payment")
-    @RequireRole({"USER"})
-    public Result<Void> payOrder(@Valid @RequestBody PaymentDTO dto, HttpServletRequest request) {
-        Long userId = getUserIdFromRequest(request);
-        orderService.payOrder(userId, dto);
-        return Result.success();
+
+    @Operation(summary = "模拟支付订单", description = "(模拟接口) 用户支付订单。实际应用中应调用支付网关并处理回调。")
+    @ApiResponse(responseCode = "200", description = "支付成功 (模拟)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentResultVO.class))) // Updated response schema
+    @PostMapping("/pay")
+    public Result<PaymentResultVO> payOrder(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestBody(description = "支付信息", required = true, content = @Content(schema = @Schema(implementation = PaymentDTO.class))) @Valid
+            @org.springframework.web.bind.annotation.RequestBody PaymentDTO dto) {
+        // In a real app, this would involve payment gateway interaction
+        PaymentResultVO paymentResult = orderService.simulatePayment(userId, dto);
+        return Result.success(paymentResult);
     }
-    
-    @Operation(summary = "确认收货", description = "确认收货完成订单")
-    @ApiResponse(responseCode = "200", description = "确认成功")
-    @PutMapping("/{orderId}/confirm")
-    @RequireRole({"USER"})
+
+    @Operation(summary = "催单", description = "用户对配送中的订单进行催单")
+    @ApiResponse(responseCode = "200", description = "催单成功")
+    @PostMapping("/{id}/urge")
+    public Result<Void> urgeOrder(
+            @RequestHeader("X-User-Id") Long userId,
+            @Parameter(description = "订单ID", required = true) @PathVariable Long id) {
+        orderService.urgeOrder(userId, id);
+        return Result.success(null);
+    }
+
+    // Keep confirmReceipt and addReview as they are useful, even if not explicitly in 3.3
+    @Operation(summary = "确认收货", description = "用户确认收到订单商品")
+    @ApiResponse(responseCode = "200", description = "确认成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OrderDetailVO.class)))
+    @PutMapping("/{id}/confirm")
     public Result<OrderDetailVO> confirmReceipt(
-            @Parameter(description = "订单ID") @PathVariable Long orderId,
-            HttpServletRequest request) {
-        Long userId = getUserIdFromRequest(request);
-        OrderDetailVO orderDetail = orderService.confirmReceipt(userId, orderId);
+            @RequestHeader("X-User-Id") Long userId,
+            @Parameter(description = "订单ID", required = true) @PathVariable Long id) {
+        OrderDetailVO orderDetail = orderService.confirmReceipt(userId, id);
         return Result.success(orderDetail);
     }
-    
-    // 内部服务调用接口 - 供商家服务调用
-    @Operation(summary = "更新订单状态", description = "商家更新订单状态(内部调用)")
-    @PutMapping("/{orderId}/status")
-    @RequireRole({"STORE", "ADMIN"})
-    public Result<Void> updateOrderStatus(
-            @Parameter(description = "订单ID") @PathVariable Long orderId,
-            @Parameter(description = "订单状态") @RequestParam String status,
-            HttpServletRequest request) {
-        Long storeId = getStoreIdFromRequest(request);
-        orderService.updateOrderStatus(orderId, storeId, status);
-        return Result.success();
-    }
-    
-    // 内部服务调用接口 - 供商家服务调用
-    @Operation(summary = "获取商家订单列表", description = "获取商家的订单列表(内部调用)")
-    @GetMapping("/store")
-    @RequireRole({"STORE", "ADMIN"})
-    public Result<List<OrderVO>> getStoreOrders(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
-            @Parameter(description = "订单状态") @RequestParam(required = false) String status,
-            HttpServletRequest request) {
-        Long storeId = getStoreIdFromRequest(request);
-        List<OrderVO> orders = orderService.getStoreOrders(storeId, page, size, status);
-        return Result.success(orders);
-    }
-    
-    // 内部服务调用接口 - 供骑手服务调用
-    @Operation(summary = "接受订单", description = "骑手接受订单(内部调用)")
-    @PutMapping("/{orderId}/accept")
-    @RequireRole({"RIDER", "ADMIN"})
-    public Result<Void> acceptOrder(
-            @Parameter(description = "订单ID") @PathVariable Long orderId,
-            HttpServletRequest request) {
-        Long riderId = getRiderIdFromRequest(request);
-        orderService.acceptOrder(orderId, riderId);
-        return Result.success();
+
+    @Operation(summary = "评价订单", description = "用户对已完成的订单进行评价")
+    @ApiResponse(responseCode = "200", description = "评价成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ReviewVO.class)))
+    @PostMapping("/{id}/reviews")
+    public Result<ReviewVO> addReview(
+            @RequestHeader("X-User-Id") Long userId,
+            @Parameter(description = "订单ID", required = true) @PathVariable Long id,
+            @RequestBody(description = "评价信息", required = true, content = @Content(schema = @Schema(implementation = ReviewDTO.class))) @Valid @org.springframework.web.bind.annotation.RequestBody ReviewDTO reviewDto) {
+        ReviewVO review = orderService.addReview(userId, id, reviewDto);
+        return Result.success(review);
     }
 
-    // 内部服务调用接口 - 供骑手服务调用
-    @Operation(summary = "取餐", description = "骑手取餐(内部调用)")
-    @PutMapping("/{orderId}/pickup")
-    @RequireRole({"RIDER", "ADMIN"})
-    public Result<Void> pickupOrder(
-            @Parameter(description = "订单ID") @PathVariable Long orderId,
-            HttpServletRequest request) {
-        Long riderId = getRiderIdFromRequest(request);
-        orderService.pickupOrder(orderId, riderId);
-        return Result.success();
-    }
-
-    // 内部服务调用接口 - 供骑手服务调用
-    @Operation(summary = "完成配送", description = "骑手完成配送(内部调用)")
-    @PutMapping("/{orderId}/complete")
-    @RequireRole({"RIDER", "ADMIN"})
-    public Result<Void> completeDelivery(
-            @Parameter(description = "订单ID") @PathVariable Long orderId,
-            HttpServletRequest request) {
-        Long riderId = getRiderIdFromRequest(request);
-        orderService.completeDelivery(orderId, riderId);
-        return Result.success();
-    }
-
-    // 内部服务调用接口 - 供骑手服务调用
-    @Operation(summary = "获取可接订单", description = "获取可接订单列表(内部调用)")
-    @GetMapping("/available")
-    @RequireRole({"RIDER", "ADMIN"})
-    public Result<List<RiderOrderVO>> getAvailableOrders() {
-        List<RiderOrderVO> orders = orderService.getAvailableOrders();
-        return Result.success(orders);
-    }
-
-    // 内部服务调用接口 - 供骑手服务调用
-    @Operation(summary = "获取骑手订单", description = "获取骑手订单列表(内部调用)")
-    @GetMapping("/rider/{riderId}")
-    @RequireRole({"RIDER", "ADMIN"})
-    public Result<List<RiderOrderVO>> getRiderOrders(
-            @Parameter(description = "骑手ID") @PathVariable Long riderId) {
-        List<RiderOrderVO> orders = orderService.getRiderOrders(riderId);
-        return Result.success(orders);
-    }    /**
-     * 从请求中获取用户ID (由网关设置到header中)
-     */
-    private Long getUserIdFromRequest(HttpServletRequest request) {
-        String userIdStr = request.getHeader("X-User-Id");
-        return userIdStr != null ? Long.parseLong(userIdStr) : null;
-    }
-    
-    /**
-     * 从请求中获取商家ID (由网关设置到header中)
-     */
-    private Long getStoreIdFromRequest(HttpServletRequest request) {
-        String storeIdStr = request.getHeader("X-Store-Id");
-        return storeIdStr != null ? Long.parseLong(storeIdStr) : null;
-    }
-    
-    /**
-     * 从请求中获取骑手ID (由网关设置到header中)
-     */
-    private Long getRiderIdFromRequest(HttpServletRequest request) {
-        String riderIdStr = request.getHeader("X-Rider-Id");
-        return riderIdStr != null ? Long.parseLong(riderIdStr) : null;
+    @Operation(summary = "获取订单骑手位置", description = "获取指定订单的骑手当前位置")
+    @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LocationUpdateDTO.class)))
+    @GetMapping("/{id}/rider/location")
+    public Result<LocationUpdateDTO> getRiderLocation(
+            @RequestHeader("X-User-Id") Long userId,
+            @Parameter(description = "订单ID", required = true) @PathVariable Long id) {
+        LocationUpdateDTO location = orderService.getRiderLocation(userId, id);
+        return Result.success(location);
     }
 }

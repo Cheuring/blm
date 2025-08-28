@@ -1,192 +1,194 @@
 package com.blm.order.service.impl;
 
+
 import com.blm.common.dto.CartItemDTO;
 import com.blm.common.entity.Cart;
 import com.blm.common.entity.Food;
 import com.blm.common.entity.Store;
-import com.blm.common.exception.BusinessException;
+import com.blm.common.exception.CommonException;
 import com.blm.common.feign.StoreServiceClient;
-import com.blm.common.result.Result;
+import com.blm.common.result.ExceptionConstant;
 import com.blm.common.vo.CartItemVO;
 import com.blm.common.vo.CartVO;
-import com.blm.common.vo.FoodVO;
-import com.blm.common.vo.StoreVO;
 import com.blm.order.repository.CartRepository;
 import com.blm.order.service.CartService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class CartServiceImpl implements CartService {
-    
-    private final CartRepository cartRepository;
-    private final StoreServiceClient storeServiceClient;
-    
+
+    @Autowired
+    private CartRepository cartRepository;
+
+    @Autowired
+    private StoreServiceClient storeService;
+
+    private CartVO buildCartVO(List<Cart> carts) {
+        if (carts.isEmpty()) {
+            CartVO emptyCart = new CartVO();
+            emptyCart.setItems(new ArrayList<>());
+            emptyCart.setTotalAmount(BigDecimal.ZERO);
+            return emptyCart; // Return empty cart if no items
+        }
+        // Get store info from the first item
+        Long storeId = carts.get(0).getStoreId();
+        Store store = storeService.getStoreById(storeId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.STORE_NOT_FOUND));
+
+        List<CartItemVO> items = carts.stream().map(c -> {
+            Food food = storeService.getFoodById(c.getFoodId())
+                    .orElseThrow(() -> new CommonException(ExceptionConstant.FOOD_NOT_FOUND)); // Should not happen ideally
+            CartItemVO vo = new CartItemVO();
+            vo.setId(c.getId()); // Cart Item ID
+            vo.setFoodId(food.getId());
+            vo.setFoodName(food.getName());
+            vo.setFoodImage(food.getImage());
+            vo.setPrice(food.getPrice());
+            vo.setQuantity(c.getQuantity());
+            vo.setAmount(food.getPrice().multiply(BigDecimal.valueOf(c.getQuantity())));
+            return vo;
+        }).collect(Collectors.toList());
+
+        BigDecimal total = items.stream()
+                .map(CartItemVO::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        CartVO cartVO = new CartVO();
+        cartVO.setStoreId(storeId);
+        cartVO.setStoreName(store.getName());
+        cartVO.setItems(items);
+        cartVO.setTotalAmount(total);
+        return cartVO;
+    }
+
+    @Override
+    public List<CartVO> getCarts(Long userId) {
+        List<Cart> rawCarts = cartRepository.findAllByUserId(userId);
+        Map<Long, List<Cart>> carts = rawCarts.stream()
+                .collect(Collectors.groupingBy(Cart::getStoreId));
+        List<CartVO> cartVOs = new ArrayList<>();
+        if (carts.isEmpty()) {
+            return cartVOs; // No items in cart
+        }
+
+        carts.forEach((k, v) -> cartVOs.add(buildCartVO(v)));
+        return cartVOs;
+    }
+
     @Override
     public CartVO getCart(Long userId, Long storeId) {
-        List<Cart> carts = cartRepository.findByUserIdAndStoreId(userId, storeId);
-        return buildCartVO(carts, storeId);
+        List<Cart> carts = cartRepository.findAllByUserIdAndStoreId(userId, storeId);
+        return buildCartVO(carts);
     }
-    
+
     @Override
     @Transactional
     public CartVO addItem(Long userId, CartItemDTO dto) {
-        // 验证商品存在且可购买
-        Result<FoodVO> foodResult = storeServiceClient.getFoodById(dto.getFoodId());
-        if (!foodResult.isSuccess() || foodResult.getData() == null) {
-            throw new BusinessException("商品不存在");
-        }
-        
-        FoodVO food = foodResult.getData();
-        if (!Food.FoodStatus.ON_SHELF.equals(food.getStatus())) {
-            throw new BusinessException("商品已下架");
-        }
-        
+        // 1. Validate Food and Store
+        Food food = storeService.getFoodByIdAndStatus(dto.getFoodId(), Food.FoodStatus.ON_SHELF) // Check if food exists and is available
+                .orElseThrow(() -> new CommonException(ExceptionConstant.FOOD_NOT_FOUND));
         if (!food.getStoreId().equals(dto.getStoreId())) {
-            throw new BusinessException("商品不属于该店铺");
+            throw new CommonException(ExceptionConstant.REQ_PARAM_ERROR);
         }
-        
-        // 检查是否已存在该商品
-        Optional<Cart> existingCart = cartRepository.findByUserIdAndStoreIdAndFoodId(
-                userId, dto.getStoreId(), dto.getFoodId());
-        
-        if (existingCart.isPresent()) {
-            // 更新数量
-            Cart cart = existingCart.get();
-            cart.setQuantity(cart.getQuantity() + dto.getQuantity());
-            cart.setUpdatedAt(LocalDateTime.now());
-            cartRepository.updateQuantity(cart.getId(), cart.getQuantity(), cart.getUpdatedAt());
+        storeService.getStoreByIdAndStatus(dto.getStoreId(), Store.StoreStatus.OPEN) // Check if store exists and is open
+                .orElseThrow(() -> new CommonException(ExceptionConstant.STORE_CLOSED));
+
+        // 2. Find existing item or create new
+        List<Cart> existingCartItems = cartRepository.findAllByUserIdAndStoreId(userId, dto.getStoreId());
+        Optional<Cart> existingItemOpt = existingCartItems.stream()
+                .filter(item -> item.getFoodId().equals(dto.getFoodId()))
+                .findFirst();
+
+        if (existingItemOpt.isPresent()) {
+            // Update quantity
+            Cart existingItem = existingItemOpt.get();
+            int newQuantity = existingItem.getQuantity() + dto.getQuantity();
+            if (newQuantity <= 0) { // If quantity becomes zero or less, remove item
+                cartRepository.deleteByIdAndUserId(existingItem.getId(), userId);
+            } else {
+                // Check stock if necessary
+                // if (food.getStock() != null && newQuantity > food.getStock()) {
+                //     throw BusinessException.of(400, "商品库存不足");
+                // }
+                existingItem.setQuantity(newQuantity);
+                existingItem.setUpdatedAt(LocalDateTime.now());
+                cartRepository.updateQuantity(existingItem);
+            }
         } else {
-            // 新增购物车项
-            Cart cart = new Cart();
-            cart.setUserId(userId);
-            cart.setStoreId(dto.getStoreId());
-            cart.setFoodId(dto.getFoodId());
-            cart.setQuantity(dto.getQuantity());
-            cart.setCreatedAt(LocalDateTime.now());
-            cart.setUpdatedAt(LocalDateTime.now());
-            cartRepository.insert(cart);
+            // Add new item
+            if (dto.getQuantity() <= 0) {
+                throw new CommonException(ExceptionConstant.REQ_PARAM_ERROR);
+            }
+            // Check stock if necessary
+            // if (food.getStock() != null && dto.getQuantity() > food.getStock()) {
+            //     throw BusinessException.of(400, "商品库存不足");
+            // }
+            Cart newItem = new Cart();
+            newItem.setUserId(userId);
+            newItem.setStoreId(dto.getStoreId());
+            newItem.setFoodId(dto.getFoodId());
+            newItem.setQuantity(dto.getQuantity());
+            newItem.setCreatedAt(LocalDateTime.now());
+            newItem.setUpdatedAt(LocalDateTime.now());
+            cartRepository.insert(newItem);
+            existingCartItems.add(newItem);
         }
-        
-        return getCart(userId, dto.getStoreId());
+
+        return buildCartVO(existingCartItems); // Rebuild cart VO after modification
     }
-    
+
     @Override
     @Transactional
-    public CartVO updateItem(Long userId, Long cartItemId, Integer quantity) {
-        Cart cart = cartRepository.findByIdAndUserId(cartItemId, userId)
-                .orElseThrow(() -> new BusinessException("购物车项不存在"));
-        
-        if (quantity <= 0) {
-            cartRepository.deleteByIdAndUserId(cartItemId, userId);
-        } else {
-            cartRepository.updateQuantity(cartItemId, quantity, LocalDateTime.now());
+    public CartVO updateItemQuantityById(Long userId, Long cartItemId, Integer quantity) {
+        if (quantity == null || quantity <= 0) {
+            // If quantity is zero or less, treat as removal
+            return removeItemById(userId, cartItemId);
         }
-        
-        return getCart(userId, cart.getStoreId());
+
+        Cart cartItem = cartRepository.findByIdAndUserId(cartItemId, userId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.ORDER_CART_ITEM_NOT_FOUND));
+
+        // Optional: Check stock before updating
+        // Food food = foodRepository.findById(cartItem.getFoodId()).orElse(null);
+        // if (food != null && food.getStock() != null && quantity > food.getStock()) {
+        //     throw BusinessException.of(400, "商品库存不足");
+        // }
+
+        cartItem.setQuantity(quantity);
+        cartItem.setUpdatedAt(LocalDateTime.now());
+        cartRepository.updateQuantity(cartItem);
+
+        return getCart(userId, cartItem.getStoreId());
     }
-    
+
     @Override
     @Transactional
-    public CartVO removeItem(Long userId, Long cartItemId) {
-        Cart cart = cartRepository.findByIdAndUserId(cartItemId, userId)
-                .orElseThrow(() -> new BusinessException("购物车项不存在"));
-        
-        Long storeId = cart.getStoreId();
+    public CartVO removeItemById(Long userId, Long cartItemId) {
+        Cart cartItem = cartRepository.findByIdAndUserId(cartItemId, userId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.ORDER_CART_ITEM_NOT_FOUND));
+
         cartRepository.deleteByIdAndUserId(cartItemId, userId);
-        
-        return getCart(userId, storeId);
+        return getCart(userId, cartItem.getStoreId());
     }
-    
+
     @Override
     @Transactional
-    public void clearCart(Long userId, Long storeId) {
-        cartRepository.deleteByUserIdAndStoreId(userId, storeId);
+    public void clearCart(Long userId) {
+        cartRepository.deleteByUserId(userId);
     }
-    
-    /**
-     * 构建购物车VO
-     */
-    private CartVO buildCartVO(List<Cart> carts, Long storeId) {
-        if (carts.isEmpty()) {
-            CartVO cartVO = new CartVO();
-            cartVO.setStoreId(storeId);
-            cartVO.setItems(List.of());
-            cartVO.setTotalAmount(BigDecimal.ZERO);
-            cartVO.setTotalItems(0);
-            return cartVO;
-        }
-        
-        // 获取店铺信息
-        StoreVO store = null;
-        try {
-            Result<StoreVO> storeResult = storeServiceClient.getStoreById(storeId);
-            if (storeResult.isSuccess()) {
-                store = storeResult.getData();
-            }
-        } catch (Exception e) {
-            log.warn("获取店铺信息失败: {}", e.getMessage());
-        }
-        
-        // 构建购物车项
-        List<CartItemVO> items = carts.stream().map(cart -> {
-            CartItemVO itemVO = new CartItemVO();
-            itemVO.setId(cart.getId());
-            itemVO.setFoodId(cart.getFoodId());
-            itemVO.setQuantity(cart.getQuantity());
-            
-            // 获取商品信息
-            try {
-                Result<FoodVO> foodResult = storeServiceClient.getFoodById(cart.getFoodId());
-                if (foodResult.isSuccess() && foodResult.getData() != null) {
-                    FoodVO food = foodResult.getData();
-                    itemVO.setFoodName(food.getName());
-                    itemVO.setFoodImage(food.getImage());
-                    itemVO.setPrice(food.getPrice());
-                    itemVO.setAmount(food.getPrice().multiply(BigDecimal.valueOf(cart.getQuantity())));
-                } else {
-                    // 商品不存在时的默认值
-                    itemVO.setFoodName("商品已下架");
-                    itemVO.setPrice(BigDecimal.ZERO);
-                    itemVO.setAmount(BigDecimal.ZERO);
-                }
-            } catch (Exception e) {
-                log.warn("获取商品信息失败: {}", e.getMessage());
-                itemVO.setFoodName("获取商品信息失败");
-                itemVO.setPrice(BigDecimal.ZERO);
-                itemVO.setAmount(BigDecimal.ZERO);
-            }
-            
-            return itemVO;
-        }).collect(Collectors.toList());
-        
-        // 计算总金额和总数量
-        BigDecimal totalAmount = items.stream()
-                .map(CartItemVO::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        Integer totalItems = items.stream()
-                .mapToInt(CartItemVO::getQuantity)
-                .sum();
-        
-        CartVO cartVO = new CartVO();
-        cartVO.setStoreId(storeId);
-        cartVO.setStoreName(store != null ? store.getName() : "未知店铺");
-        cartVO.setItems(items);
-        cartVO.setTotalAmount(totalAmount);
-        cartVO.setTotalItems(totalItems);
-        
-        return cartVO;
+
+    @Override
+    public void clearCartByStore(Long userId, Long storeId) {
+        cartRepository.deleteByUserIdAndStoreId(userId, storeId);
     }
 }

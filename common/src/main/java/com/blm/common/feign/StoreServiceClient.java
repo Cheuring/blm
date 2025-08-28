@@ -2,13 +2,11 @@ package com.blm.common.feign;
 
 import com.blm.common.entity.Food;
 import com.blm.common.entity.Store;
-import com.blm.common.result.Result;
-import com.blm.common.vo.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
-import java.util.List;
+
 import java.util.Optional;
 
 /**
@@ -23,34 +21,18 @@ public interface StoreServiceClient {
     @GetMapping("/{storeId}")
     Optional<Store> getStoreById(@PathVariable("storeId") Long storeId);
 
+    @GetMapping("/{storeId}/status")
+    Optional<Store> getStoreByIdAndStatus(@PathVariable("storeId") Long storeId, @RequestParam("status") Store.StoreStatus status);
+
     /**
      * 根据商品ID获取商品信息
      */
     @GetMapping("/foods/{foodId}")
     Optional<Food> getFoodById(@PathVariable("foodId") Long foodId);
-    
-    /**
-     * 获取店铺的商品分类列表
-     */
-    @GetMapping("/{storeId}/categories")
-    Optional<List<FoodCategoryVO>> getStoreCategories(@PathVariable("storeId") Long storeId);
-    
-    /**
-     * 获取店铺的商品列表
-     */
-    @GetMapping("/{storeId}/foods")
-    Optional<List<FoodVO>> getStoreFoods(@PathVariable("storeId") Long storeId,
-                                       @RequestParam(value = "categoryId", required = false) Long categoryId);
-    
-    /**
-     * 获取店铺的促销活动列表
-     */
-    @GetMapping("/{storeId}/promotions")
-    Optional<List<PromotionVO>> getStorePromotions(@PathVariable("storeId") Long storeId);
-    
-    /**
-     * 验证商家对店铺的所有权
-     */
+
+    @GetMapping("/foods/{foodId}/status")
+    Optional<Food> getFoodByIdAndStatus(@PathVariable("foodId") Long foodId, @RequestParam("status") Food.FoodStatus status);
+
     @GetMapping("/{storeId}/owner")
-    Result<Long> getStoreOwnerId(@PathVariable("storeId") Long storeId);
+    Optional<Long> getStoreOwnerIdByStoreId(@PathVariable("storeId") Long storeId);
 }

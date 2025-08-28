@@ -1,38 +1,112 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.blm.order.repository.OrderRepository">
-
-    <resultMap id="BaseResultMap" type="com.blm.common.entity.Order">
-        <id column="id" property="id" />
-        <result column="order_no" property="orderNo" />
-        <result column="user_id" property="userId" />
-        <result column="store_id" property="storeId" />
-        <result column="rider_id" property="riderId" />
-        <result column="address_id" property="addressId" />
-        <result column="total_amount" property="totalAmount" />
-        <result column="delivery_fee" property="deliveryFee" />
-        <result column="discount_amount" property="discountAmount" />
-        <result column="coupon_discount" property="couponDiscount" />
-        <result column="user_coupon_id" property="userCouponId" />
-        <result column="payment_amount" property="paymentAmount" />
-        <result column="payment_type" property="paymentType" typeHandler="org.apache.ibatis.type.EnumTypeHandler" />
-        <result column="status" property="status" typeHandler="org.apache.ibatis.type.EnumTypeHandler" />
-        <result column="dispatch_type" property="dispatchType" />
-        <result column="remark" property="remark" />
-        <result column="expected_time" property="expectedTime" />
-        <result column="actual_time" property="actualTime" />
-        <result column="created_at" property="createdAt" />
-        <result column="updated_at" property="updatedAt" />
+    <resultMap id="topFoodItemVOResultMap" type="com.blm.common.vo.PlatformStatsVO$TopStoreItemVO">
+        <id property="storeId" column="store_id"/>
+        <result property="storeName" column="store_name"/>
+        <result property="orderCount" column="order_count"/>
+        <result property="salesAmount" column="sales_amount"/>
     </resultMap>
-
-    <select id="findByStoreIdWithPagination" resultMap="BaseResultMap">
-        SELECT * FROM orders 
-        WHERE store_id = #{storeId}
-        <if test="status != null and status != ''">
+    <!-- 根据用户ID和状态查询订单列表（支持PageHelper） -->
+    <select id="findByUserIdAndStatus" resultType="com.blm.common.entity.Order">
+        SELECT * FROM orders
+        WHERE user_id = #{userId}
+        <if test="status != null">
             AND status = #{status}
         </if>
-        ORDER BY created_at DESC 
-        LIMIT #{size} OFFSET #{offset}
+        ORDER BY created_at DESC
     </select>
 
+    <!-- 管理员根据条件查询订单列表（支持PageHelper） -->
+    <select id="findByConditions" resultType="com.blm.common.entity.Order">
+        SELECT * FROM orders
+        WHERE 1=1
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        <if test="userId != null">
+            AND user_id = #{userId}
+        </if>
+        <if test="storeId != null">
+            AND store_id = #{storeId}
+        </if>
+        <if test="riderId != null">
+            AND rider_id = #{riderId}
+        </if>
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 根据状态和创建时间区间查询订单数量 -->
+    <select id="countByStatusAndCreatedAtBetween" resultType="long">
+        SELECT COUNT(*)
+        FROM orders
+        WHERE status = #{status}
+          AND created_at BETWEEN #{start} AND #{end}
+    </select>
+
+    <!-- 根据状态和创建时间区间查询订单总金额 -->
+    <select id="sumTotalByStatusAndCreatedAtBetween" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(payment_amount), 0)
+        FROM orders
+        WHERE status = #{status}
+          AND created_at BETWEEN #{start} AND #{end}
+    </select>
+
+    <!-- 查询销售额最高的店铺 -->
+    <select id="findTopStores" resultMap="topFoodItemVOResultMap">
+        SELECT s.id                  as store_id,
+               s.name                as store_name,
+               COUNT(o.id)           as order_count,
+               SUM(o.payment_amount) as total_amount
+        FROM orders o
+                 JOIN store s ON o.store_id = s.id
+        WHERE o.status like 'COMPLETED'
+        GROUP BY o.store_id
+        ORDER BY total_amount DESC
+    </select>
+    <select id="findByStoreIdAndStatus" resultType="com.blm.common.entity.Order">
+        SELECT * FROM orders
+        WHERE store_id = #{storeId}
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY created_at DESC
+    </select>
+    <select id="findTop10ByStore" resultType="com.blm.dto.GoodsSalesDTO">
+        select od.food_name name, sum(od.quantity) number
+        from order_detail od,
+             orders o
+        where od.order_id = o.id
+          and o.store_id = #{storeId}
+          and o.status = #{status}
+          and o.updated_at between #{begin} and #{end}
+        group by name
+        order by number desc limit 0,10
+    </select>
+    <select id="countStoreByStatusAndCreatedAtBetween" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM orders
+        WHERE status = #{status}
+          AND store_id = #{storeId}
+          AND created_at BETWEEN #{start} AND #{end}
+    </select>
+    <select id="sumStoreTotalByStatusAndCreatedAtBetween" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(payment_amount), 0)
+        FROM orders
+        WHERE status = #{status}
+          AND store_id = #{storeId}
+          AND created_at BETWEEN #{start} AND #{end}
+    </select>
+    <select id="countStoreByStatus" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM orders
+        WHERE status = #{status}
+          AND store_id = #{storeId}
+    </select>
+    <select id="sumStoreTotalByStatus" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(payment_amount), 0)
+        FROM orders
+        WHERE status = #{status}
+          AND store_id = #{storeId}
+    </select>
 </mapper>

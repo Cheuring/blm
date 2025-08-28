@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blm.order.repository.OrderItemRepository">
+
+    <resultMap id="topFoodItemVOResultMap" type="com.blm.common.vo.PlatformStatsVO$TopFoodItemVO">
+        <id property="foodId" column="food_id"/>
+        <result property="foodName" column="food_name"/>
+        <result property="storeName" column="store_name"/>
+        <result property="salesCount" column="total_quantity"/>
+    </resultMap>
+    <resultMap id="topFoodItemVOResultMap2" type="com.blm.common.vo.StoreStatisticsVO$HotFoodVO">
+        <id property="foodId" column="food_id"/>
+        <result property="foodName" column="food_name"/>
+        <result property="foodImage" column="food_image"/>
+        <result property="saleCount" column="sale_count"/>
+        <result property="saleAmount" column="sale_amount"/>
+    </resultMap>
+
+    <!-- 查询销量最高的商品 -->
+    <select id="findTopSellingFoods" resultMap="topFoodItemVOResultMap">
+        SELECT 
+            f.id as food_id, 
+            f.name as food_name, 
+            s.id as store_id, 
+            s.name as store_name,
+            SUM(oi.quantity) as total_quantity,
+            SUM(oi.price * oi.quantity) as total_sales
+        FROM order_detail oi
+        JOIN food f ON oi.food_id = f.id
+        JOIN store s ON f.store_id = s.id
+        JOIN orders o ON oi.order_id = o.id
+        WHERE o.status like 'COMPLETED'
+        GROUP BY oi.food_id
+        ORDER BY total_quantity DESC
+    </select>
+    <select id="StoreFindTopSellingFoods" resultMap="topFoodItemVOResultMap2">
+        SELECT
+            f.id as food_id,
+            f.name as food_name,
+            f.image as food_image,
+            SUM(oi.quantity) as sale_count,
+            SUM(oi.price * oi.quantity) as sale_amount
+        FROM order_detail oi
+        JOIN food f ON oi.food_id = f.id
+        JOIN orders o ON oi.order_id = o.id
+        WHERE o.store_id = #{storeId}
+        GROUP BY oi.food_id
+        ORDER BY sale_count DESC
+    </select>
+
+</mapper>

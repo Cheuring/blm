@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blm.order.repository.ReviewRepository">
+    <!-- 根据店铺ID和评分查询评价列表（支持PageHelper） -->
+    <select id="findByStoreIdAndRating" resultType="com.blm.common.entity.Review">
+        SELECT * FROM review
+        WHERE store_id = #{storeId}
+        AND store_rating = #{storeRating}
+        ORDER BY created_at DESC
+    </select>
+    
+    <!-- 根据店铺ID和评分统计评价数量 -->
+    <select id="countByStoreIdAndRating" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM review
+        WHERE store_id = #{storeId}
+        <if test="rating != null">AND store_rating = #{rating}</if>
+    </select>
+    
+    <!-- 管理员查询评价列表（带条件筛选和分页） -->
+    <select id="findByConditions" resultType="com.blm.common.entity.Review">
+        SELECT r.* FROM review r
+        JOIN store s ON r.store_id = s.id
+        JOIN user u ON r.user_id = u.id
+        WHERE 1=1
+        <if test="rating != null">AND r.rating = #{rating}</if>
+        <if test="keyword != null and keyword != ''">
+            AND (r.content LIKE CONCAT('%',#{keyword},'%')
+            OR s.name LIKE CONCAT('%',#{keyword},'%')
+            OR u.username LIKE CONCAT('%',#{keyword},'%'))
+        </if>
+        ORDER BY r.created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <!-- 统计符合条件的评价数量 -->
+    <select id="countByConditions" resultType="long">
+        SELECT COUNT(*) FROM review r
+        JOIN store s ON r.store_id = s.id
+        JOIN user u ON r.user_id = u.id
+        WHERE 1=1
+        <if test="rating != null">AND r.rating = #{rating}</if>
+        <if test="keyword != null and keyword != ''">
+            AND (r.content LIKE CONCAT('%',#{keyword},'%')
+            OR s.name LIKE CONCAT('%',#{keyword},'%')
+            OR u.username LIKE CONCAT('%',#{keyword},'%'))
+        </if>
+    </select>
+    
+    <!-- 管理员查询评价列表（支持PageHelper分页） -->
+    <select id="findByConditionsForAdmin" resultType="com.blm.common.entity.Review">
+        SELECT r.* FROM review r
+        WHERE 1=1
+        <if test="userId != null">AND r.user_id = #{userId}</if>
+        <if test="storeId != null">AND r.store_id = #{storeId}</if>
+        <if test="foodId != null">AND r.food_id = #{foodId}</if>
+        <if test="rating != null">AND r.rating = #{rating}</if>
+        ORDER BY r.created_at DESC
+    </select>
+
+    <insert id="save" parameterType="com.blm.common.entity.Review" useGeneratedKeys="true" keyProperty="id">
+        <if test="id == null">
+            INSERT INTO review(
+                parent_id, order_id, user_id, store_id, rider_id,
+                store_rating, rider_rating, content, images,
+                reply, reply_time, is_anonymous, created_at, updated_at
+            ) VALUES (
+                #{parentId}, #{orderId}, #{userId}, #{storeId}, #{riderId},
+                #{storeRating}, #{riderRating}, #{content}, #{images},
+                #{reply}, #{replyTime}, #{isAnonymous}, #{createdAt}, #{updatedAt}
+            )
+        </if>
+        <if test="id != null">
+            UPDATE review SET
+                <if test="parentId != null">parent_id = #{parentId},</if>
+                <if test="orderId != null">order_id = #{orderId},</if>
+                <if test="userId != null">user_id = #{userId},</if>
+                <if test="storeId != null">store_id = #{storeId},</if>
+                <if test="riderId != null">rider_id = #{riderId},</if>
+                <if test="storeRating != null">store_rating = #{storeRating},</if>
+                <if test="riderRating != null">rider_rating = #{riderRating},</if>
+                <if test="content != null">content = #{content},</if>
+                <if test="images != null">images = #{images},</if>
+                <if test="reply != null">reply = #{reply},</if>
+                <if test="replyTime != null">reply_time = #{replyTime},</if>
+                <if test="isAnonymous != null">is_anonymous = #{isAnonymous},</if>
+                updated_at = #{updatedAt}
+            WHERE id = #{id}
+        </if>
+    </insert>
+</mapper>

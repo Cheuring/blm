@@ -2,6 +2,7 @@ package com.blm.common.feign;
 
 import com.blm.common.dto.RegisterDTO;
 import com.blm.common.entity.User;
+import com.blm.common.entity.UserAddress;
 import com.blm.common.vo.UserVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
@@ -28,4 +29,10 @@ public interface UserServiceClient {
 
     @PostMapping("/register")
     Optional<UserVO> register(@RequestBody RegisterDTO dto);
+
+    @GetMapping("{userId}/address/{Id}")
+    Optional<UserAddress> getAddressByUserIdAndId(@PathVariable("userId") Long userId, @PathVariable("Id") Long Id);
+
+    @GetMapping("/address/{Id}")
+    Optional<UserAddress> getAddressById(@PathVariable("Id") Long Id);
 }

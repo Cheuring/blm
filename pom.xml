@@ -43,6 +43,7 @@
         <module>user-service</module>
         <module>order-service</module>
         <module>store-service</module>
+        <module>rider-service</module>
     </modules>
 
     <dependencyManagement>

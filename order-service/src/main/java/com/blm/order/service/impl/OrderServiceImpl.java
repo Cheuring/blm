@@ -96,8 +96,8 @@ public class OrderServiceImpl implements OrderService {
         }
         
         // 检查起送金额
-        if (store.getMinDeliveryAmount() != null && totalAmount.compareTo(store.getMinDeliveryAmount()) < 0) {
-            throw new BusinessException("未达到起送金额 " + store.getMinDeliveryAmount() + " 元");
+        if (store.getMinOrderAmount() != null && totalAmount.compareTo(store.getMinOrderAmount()) < 0) {
+            throw new BusinessException("未达到起送金额 " + store.getMinOrderAmount() + " 元");
         }
         
         order.setTotalAmount(totalAmount);
@@ -255,6 +255,37 @@ public class OrderServiceImpl implements OrderService {
                 LocalDateTime.now(), LocalDateTime.now());
     }
     
+    @Override
+    @Transactional
+    public void pickupOrder(Long orderId, Long riderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException("订单不存在"));
+        
+        if (!order.getRiderId().equals(riderId)) {
+            throw new BusinessException("只能取自己接受的订单");
+        }
+        
+        if (!Order.OrderStatus.DISPATCHED.equals(order.getStatus())) {
+            throw new BusinessException("订单状态不允许取餐");
+        }
+        
+        orderRepository.updateStatusAndActualTime(orderId, Order.OrderStatus.DELIVERING, 
+                LocalDateTime.now(), LocalDateTime.now());
+    }
+    
+    @Override
+    public List<RiderOrderVO> getAvailableOrders() {
+        // 获取状态为READY_FOR_PICKUP的订单
+        List<Order> orders = orderRepository.findByStatus(Order.OrderStatus.READY_FOR_PICKUP);
+        return orders.stream().map(this::buildRiderOrderVO).collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<RiderOrderVO> getRiderOrders(Long riderId) {
+        List<Order> orders = orderRepository.findByRiderId(riderId);
+        return orders.stream().map(this::buildRiderOrderVO).collect(Collectors.toList());
+    }
+    
     /**
      * 生成订单号
      */
@@ -275,7 +306,7 @@ public class OrderServiceImpl implements OrderService {
             if (storeResult.isSuccess() && storeResult.getData() != null) {
                 StoreVO store = storeResult.getData();
                 orderVO.setStoreName(store.getName());
-                orderVO.setStoreImage(store.getImage());
+                orderVO.setStoreImage(store.getLogo());
             }
         } catch (Exception e) {
             log.warn("获取店铺信息失败: {}", e.getMessage());
@@ -286,8 +317,50 @@ public class OrderServiceImpl implements OrderService {
     }
     
     /**
-     * 构建OrderDetailVO
+     * 构建RiderOrderVO
      */
+    private RiderOrderVO buildRiderOrderVO(Order order) {
+        RiderOrderVO riderOrderVO = new RiderOrderVO();
+        BeanUtils.copyProperties(order, riderOrderVO);
+        riderOrderVO.setOrderStatus(order.getStatus());
+        
+        // 获取店铺信息
+        try {
+            Result<StoreVO> storeResult = storeServiceClient.getStoreById(order.getStoreId());
+            if (storeResult.isSuccess() && storeResult.getData() != null) {
+                StoreVO store = storeResult.getData();
+                riderOrderVO.setStoreName(store.getName());
+                riderOrderVO.setStoreImage(store.getLogo());
+                riderOrderVO.setStoreAddress(store.getAddress());
+            }
+        } catch (Exception e) {
+            log.error("获取店铺信息失败", e);
+        }
+        
+        // 获取用户信息
+        try {
+            Result<UserVO> userResult = userServiceClient.getUserById(order.getUserId());
+            if (userResult.isSuccess() && userResult.getData() != null) {
+                UserVO user = userResult.getData();
+                riderOrderVO.setUserName(user.getFullName());
+            }
+        } catch (Exception e) {
+            log.error("获取用户信息失败", e);
+        }
+        
+        // 获取用户地址信息
+        try {
+            Result<UserAddressVO> addressResult = userServiceClient.getAddressById(order.getAddressId());
+            if (addressResult.isSuccess() && addressResult.getData() != null) {
+                UserAddressVO address = addressResult.getData();
+                riderOrderVO.setUserAddress(address.getDetailAddress());
+            }
+        } catch (Exception e) {
+            log.error("获取用户地址信息失败", e);
+        }
+        
+        return riderOrderVO;
+    }
     private OrderDetailVO buildOrderDetailVO(Order order) {
         OrderDetailVO orderDetailVO = new OrderDetailVO();
         BeanUtils.copyProperties(order, orderDetailVO);

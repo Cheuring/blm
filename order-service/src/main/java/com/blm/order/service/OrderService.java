@@ -4,6 +4,7 @@ import com.blm.common.dto.OrderCreateDTO;
 import com.blm.common.dto.PaymentDTO;
 import com.blm.common.vo.OrderDetailVO;
 import com.blm.common.vo.OrderVO;
+import com.blm.common.vo.RiderOrderVO;
 
 import java.util.List;
 
@@ -55,7 +56,22 @@ public interface OrderService {
     void acceptOrder(Long orderId, Long riderId);
     
     /**
+     * 骑手取餐
+     */
+    void pickupOrder(Long orderId, Long riderId);
+    
+    /**
      * 完成配送
      */
     void completeDelivery(Long orderId, Long riderId);
+    
+    /**
+     * 获取可接订单列表
+     */
+    List<RiderOrderVO> getAvailableOrders();
+    
+    /**
+     * 获取骑手订单列表
+     */
+    List<RiderOrderVO> getRiderOrders(Long riderId);
 }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blm.rider.repository.RiderStatsRepository">
+    
+    <!-- 保存或更新骑手统计数据 -->
+    <insert id="save" parameterType="com.blm.common.entity.RiderStats" useGeneratedKeys="true" keyProperty="id">
+        <if test="id == null">
+            INSERT INTO rider_stats(
+                rider_id, date, orders_count, completed_orders, canceled_orders, 
+                total_income, created_at, updated_at
+            ) VALUES (
+                #{riderId}, #{date}, #{ordersCount}, #{completedOrders}, #{canceledOrders}, 
+                #{totalIncome}, #{createdAt}, #{updatedAt}
+            )
+        </if>
+        <if test="id != null">
+            UPDATE rider_stats SET
+                orders_count = #{ordersCount},
+                completed_orders = #{completedOrders},
+                canceled_orders = #{canceledOrders},
+                total_income = #{totalIncome},
+                updated_at = #{updatedAt}
+            WHERE id = #{id}
+        </if>
+    </insert>
+    
+</mapper>

@@ -63,6 +63,12 @@ public interface OrderRepository {
                                 @Param("actualTime") LocalDateTime actualTime, 
                                 @Param("now") LocalDateTime now);
     
+    @Select("SELECT * FROM orders WHERE status = #{status} ORDER BY created_at ASC")
+    List<Order> findByStatus(@Param("status") Order.OrderStatus status);
+    
+    @Select("SELECT * FROM orders WHERE rider_id = #{riderId} ORDER BY created_at DESC")
+    List<Order> findByRiderId(@Param("riderId") Long riderId);
+    
     @Delete("DELETE FROM orders WHERE id = #{id}")
     void deleteById(Long id);
 }

@@ -6,6 +6,7 @@ import com.blm.common.dto.PaymentDTO;
 import com.blm.common.result.Result;
 import com.blm.common.vo.OrderDetailVO;
 import com.blm.common.vo.OrderVO;
+import com.blm.common.vo.RiderOrderVO;
 import com.blm.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -133,7 +134,19 @@ public class OrderController {
         orderService.acceptOrder(orderId, riderId);
         return Result.success();
     }
-    
+
+    // 内部服务调用接口 - 供骑手服务调用
+    @Operation(summary = "取餐", description = "骑手取餐(内部调用)")
+    @PutMapping("/{orderId}/pickup")
+    @RequireRole({"RIDER", "ADMIN"})
+    public Result<Void> pickupOrder(
+            @Parameter(description = "订单ID") @PathVariable Long orderId,
+            HttpServletRequest request) {
+        Long riderId = getRiderIdFromRequest(request);
+        orderService.pickupOrder(orderId, riderId);
+        return Result.success();
+    }
+
     // 内部服务调用接口 - 供骑手服务调用
     @Operation(summary = "完成配送", description = "骑手完成配送(内部调用)")
     @PutMapping("/{orderId}/complete")
@@ -145,8 +158,25 @@ public class OrderController {
         orderService.completeDelivery(orderId, riderId);
         return Result.success();
     }
-    
-    /**
+
+    // 内部服务调用接口 - 供骑手服务调用
+    @Operation(summary = "获取可接订单", description = "获取可接订单列表(内部调用)")
+    @GetMapping("/available")
+    @RequireRole({"RIDER", "ADMIN"})
+    public Result<List<RiderOrderVO>> getAvailableOrders() {
+        List<RiderOrderVO> orders = orderService.getAvailableOrders();
+        return Result.success(orders);
+    }
+
+    // 内部服务调用接口 - 供骑手服务调用
+    @Operation(summary = "获取骑手订单", description = "获取骑手订单列表(内部调用)")
+    @GetMapping("/rider/{riderId}")
+    @RequireRole({"RIDER", "ADMIN"})
+    public Result<List<RiderOrderVO>> getRiderOrders(
+            @Parameter(description = "骑手ID") @PathVariable Long riderId) {
+        List<RiderOrderVO> orders = orderService.getRiderOrders(riderId);
+        return Result.success(orders);
+    }    /**
      * 从请求中获取用户ID (由网关设置到header中)
      */
     private Long getUserIdFromRequest(HttpServletRequest request) {

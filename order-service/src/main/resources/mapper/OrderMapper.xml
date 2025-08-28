@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blm.order.repository.OrderRepository">
+
+    <resultMap id="BaseResultMap" type="com.blm.common.entity.Order">
+        <id column="id" property="id" />
+        <result column="order_no" property="orderNo" />
+        <result column="user_id" property="userId" />
+        <result column="store_id" property="storeId" />
+        <result column="rider_id" property="riderId" />
+        <result column="address_id" property="addressId" />
+        <result column="total_amount" property="totalAmount" />
+        <result column="delivery_fee" property="deliveryFee" />
+        <result column="discount_amount" property="discountAmount" />
+        <result column="coupon_discount" property="couponDiscount" />
+        <result column="user_coupon_id" property="userCouponId" />
+        <result column="payment_amount" property="paymentAmount" />
+        <result column="payment_type" property="paymentType" typeHandler="org.apache.ibatis.type.EnumTypeHandler" />
+        <result column="status" property="status" typeHandler="org.apache.ibatis.type.EnumTypeHandler" />
+        <result column="dispatch_type" property="dispatchType" />
+        <result column="remark" property="remark" />
+        <result column="expected_time" property="expectedTime" />
+        <result column="actual_time" property="actualTime" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <select id="findByStoreIdWithPagination" resultMap="BaseResultMap">
+        SELECT * FROM orders 
+        WHERE store_id = #{storeId}
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        ORDER BY created_at DESC 
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+</mapper>

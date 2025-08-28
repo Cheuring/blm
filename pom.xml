@@ -41,6 +41,8 @@
         <module>api-gateway</module>
         <module>auth-center</module>
         <module>user-service</module>
+        <module>order-service</module>
+        <module>store-service</module>
     </modules>
 
     <dependencyManagement>

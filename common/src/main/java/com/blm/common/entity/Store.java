@@ -31,15 +31,26 @@ public class Store {
     }
     
     private Long id;
-    private Long userId;
+    private Long merchantId;
     private String name;
+    private String logo;
     private String description;
-    private String image;
-    private String address;
     private String phone;
+    private String address;
+    private BigDecimal longitude;
+    private BigDecimal latitude;
+    private String businessHours;
     private BigDecimal deliveryFee;
-    private BigDecimal minDeliveryAmount;
+    private BigDecimal minOrderAmount;
+    private Integer averageDeliveryTime;
+    private Long categoryId;
     private StoreStatus status;
+    private BigDecimal rating;
+    private Integer monthlySales;
+    private String licenseImg;
+    private String permitImg;
+    private String rejectReason;
+    private Boolean isFeatured;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

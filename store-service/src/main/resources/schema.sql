@@ -1,64 +1,4 @@
--- 创建用户服务数据库
-CREATE DATABASE IF NOT EXISTS user_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- 创建商家服务数据库
-CREATE DATABASE IF NOT EXISTS store_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- 创建订单服务数据库
-CREATE DATABASE IF NOT EXISTS order_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- 创建骑手服务数据库
-CREATE DATABASE IF NOT EXISTS rider_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- 用户服务表结构
-USE user_db;
-
--- 用户表
-CREATE TABLE IF NOT EXISTS user (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    phone VARCHAR(20),
-    email VARCHAR(100),
-    full_name VARCHAR(100),
-    avatar VARCHAR(255),
-    role VARCHAR(20) NOT NULL DEFAULT 'USER' COMMENT '角色：USER/MERCHANT/RIDER/ADMIN',
-    status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-正常',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_username (username),
-    INDEX idx_email (email),
-    INDEX idx_phone (phone)
-) COMMENT '用户表';
-
--- 用户地址表
-CREATE TABLE IF NOT EXISTS user_address (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    receiver VARCHAR(50) NOT NULL,
-    phone VARCHAR(20) NOT NULL,
-    province VARCHAR(50) NOT NULL,
-    city VARCHAR(50) NOT NULL,
-    district VARCHAR(50) NOT NULL,
-    detail_address VARCHAR(200) NOT NULL,
-    is_default TINYINT DEFAULT 0 COMMENT '是否默认地址：0-否，1-是',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_user_default (user_id, is_default)
-) COMMENT '用户地址表';
-
--- 插入测试数据
-INSERT INTO user (username, password, phone, email, full_name, role, status) VALUES
-('admin', '$2a$10$KdDkGThGCEXpfTAYugLMpuAwIU/4eg0cqtlUOSj1QZBLVvGNzgv8u', '13800000001', 'admin@blm.com', '管理员', 'ADMIN', 1),
-('testuser', '$2a$10$KdDkGThGCEXpfTAYugLMpuAwIU/4eg0cqtlUOSj1QZBLVvGNzgv8u', '13800000002', 'user@blm.com', '测试用户', 'USER', 1),
-('merchant1', '$2a$10$KdDkGThGCEXpfTAYugLMpuAwIU/4eg0cqtlUOSj1QZBLVvGNzgv8u', '13800000003', 'merchant1@blm.com', '商家1', 'MERCHANT', 1);
-
-INSERT INTO user_address (user_id, receiver, phone, province, city, district, detail_address, is_default) VALUES
-(2, '张三', '13812345678', '北京市', '北京市', '海淀区', '中关村大街1号', 1),
-(2, '李四', '13887654321', '上海市', '上海市', '浦东新区', '陆家嘴金融中心', 0);
-
--- 商家服务表结构
+-- 商家服务数据库表结构
 USE store_db;
 
 -- 店铺分类表
@@ -156,7 +96,7 @@ CREATE TABLE IF NOT EXISTS promotion (
     INDEX idx_time (start_time, end_time)
 ) COMMENT '促销活动表';
 
--- 插入店铺分类测试数据
+-- 插入测试数据
 INSERT INTO store_category (name, icon, sort) VALUES
 ('快餐简餐', '/icons/fast-food.png', 1),
 ('中式料理', '/icons/chinese.png', 2),
@@ -164,12 +104,10 @@ INSERT INTO store_category (name, icon, sort) VALUES
 ('日韩料理', '/icons/japanese.png', 4),
 ('甜品饮品', '/icons/dessert.png', 5);
 
--- 插入店铺测试数据
 INSERT INTO store (merchant_id, name, logo, description, phone, address, longitude, latitude, business_hours, delivery_fee, min_order_amount, category_id, status) VALUES
-(3, '川味小厨', '/logos/store1.jpg', '正宗川菜，香辣美味', '010-12345678', '北京市朝阳区建国路88号', 116.4074, 39.9042, '09:00-22:00', 5.00, 20.00, 2, 'OPEN'),
-(3, '汉堡王', '/logos/store2.jpg', '美味汉堡，快速送达', '010-87654321', '北京市海淀区中关村大街1号', 116.3112, 39.9991, '10:00-23:00', 3.00, 15.00, 1, 'OPEN');
+(1, '川味小厨', '/logos/store1.jpg', '正宗川菜，香辣美味', '010-12345678', '北京市朝阳区建国路88号', 116.4074, 39.9042, '09:00-22:00', 5.00, 20.00, 2, 'OPEN'),
+(1, '汉堡王', '/logos/store2.jpg', '美味汉堡，快速送达', '010-87654321', '北京市海淀区中关村大街1号', 116.3112, 39.9991, '10:00-23:00', 3.00, 15.00, 1, 'OPEN');
 
--- 插入商品分类测试数据
 INSERT INTO food_category (store_id, name, sort) VALUES
 (1, '招牌菜', 1),
 (1, '汤类', 2),
@@ -178,7 +116,6 @@ INSERT INTO food_category (store_id, name, sort) VALUES
 (2, '小食', 2),
 (2, '饮品', 3);
 
--- 插入商品测试数据
 INSERT INTO food (store_id, category_id, name, price, original_price, description, image, stock, status) VALUES
 (1, 1, '宫保鸡丁', 28.00, 32.00, '经典川菜，鸡肉嫩滑，花生酥脆', '/foods/gongbao.jpg', 100, 'ON_SHELF'),
 (1, 1, '麻婆豆腐', 18.00, 20.00, '麻辣鲜香，嫩滑豆腐', '/foods/mapo.jpg', 80, 'ON_SHELF'),
@@ -187,7 +124,6 @@ INSERT INTO food (store_id, category_id, name, price, original_price, descriptio
 (2, 1, '鸡肉汉堡', 22.00, 25.00, '香嫩鸡胸肉汉堡', '/foods/burger2.jpg', 150, 'ON_SHELF'),
 (2, 3, '可口可乐', 8.00, 10.00, '经典可乐', '/foods/cola.jpg', 300, 'ON_SHELF');
 
--- 插入促销活动测试数据
 INSERT INTO promotion (store_id, name, description, start_time, end_time, discount_type, discount_value, min_order_amount, status) VALUES
 (1, '周末特惠', '周末全场8折', '2024-01-01 00:00:00', '2024-12-31 23:59:59', 'PERCENT', 0.80, 30.00, 1),
 (2, '新用户优惠', '新用户立减10元', '2024-01-01 00:00:00', '2024-12-31 23:59:59', 'AMOUNT', 10.00, 25.00, 1);

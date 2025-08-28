@@ -9,7 +9,9 @@ public class Food {
     
     public enum FoodStatus {
         ON_SHELF("ON_SHELF", "上架"),
-        OFF_SHELF("OFF_SHELF", "下架");
+        OFF_SHELF("OFF_SHELF", "下架"),
+        SUSPENDED("SUSPENDED", "已封禁"),
+        PENDING("PENDING", "待审核");
         
         private final String code;
         private final String description;
@@ -32,11 +34,15 @@ public class Food {
     private Long storeId;
     private Long categoryId;
     private String name;
+    private BigDecimal price;
+    private BigDecimal originalPrice;
     private String description;
     private String image;
-    private BigDecimal price;
+    private Integer sales;
     private Integer stock;
     private FoodStatus status;
+    private String rejectReason;
+    private Boolean isFeatured;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

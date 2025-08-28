@@ -25,27 +25,29 @@
     
     <!-- 保存用户（插入或更新） -->
     <insert id="save" parameterType="com.blm.common.entity.User" useGeneratedKeys="true" keyProperty="id">
-        <if test="id == null">
-            INSERT INTO user(
-                username, password, phone, email,
-                role, status, avatar, created_at, updated_at
-            ) VALUES (
-                #{username}, #{password}, #{phone}, #{email},
-                #{role}, #{status}, #{avatar}, #{createdAt}, #{updatedAt}
-            )
-        </if>
-        <if test="id != null">
-            UPDATE user SET
-                <if test="username != null">username = #{username},</if>
-                <if test="password != null">password = #{password},</if>
-                <if test="phone != null">phone = #{phone},</if>
-                <if test="email != null">email = #{email},</if>
-                <if test="role != null">role = #{role},</if>
-                <if test="status != null">status = #{status},</if>
-                <if test="avatar != null">avatar = #{avatar},</if>
-                <if test="createdAt != null">created_at = #{createdAt},</if>
-                updated_at = #{updatedAt}
-            WHERE id = #{id}
-        </if>
+        <choose>
+            <when test="id == null">
+                INSERT INTO user(
+                    username, password, phone, email,
+                    role, status, avatar, created_at, updated_at
+                ) VALUES (
+                    #{username}, #{password}, #{phone}, #{email},
+                    #{role}, #{status}, #{avatar}, #{createdAt}, #{updatedAt}
+                )
+            </when>
+            <otherwise>
+                UPDATE user SET
+                    <if test="username != null">username = #{username},</if>
+                    <if test="password != null">password = #{password},</if>
+                    <if test="phone != null">phone = #{phone},</if>
+                    <if test="email != null">email = #{email},</if>
+                    <if test="role != null">role = #{role},</if>
+                    <if test="status != null">status = #{status},</if>
+                    <if test="avatar != null">avatar = #{avatar},</if>
+                    <if test="createdAt != null">created_at = #{createdAt},</if>
+                    updated_at = #{updatedAt}
+                WHERE id = #{id}
+            </otherwise>
+        </choose>
     </insert>
 </mapper>

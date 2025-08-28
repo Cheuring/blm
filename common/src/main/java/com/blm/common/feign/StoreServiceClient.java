@@ -40,7 +40,7 @@ public interface StoreServiceClient {
      */
     @GetMapping("/{storeId}/foods")
     Optional<List<FoodVO>> getStoreFoods(@PathVariable("storeId") Long storeId,
-                                       @RequestParam(required = false) Long categoryId);
+                                       @RequestParam(value = "categoryId", required = false) Long categoryId);
     
     /**
      * 获取店铺的促销活动列表

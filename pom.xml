@@ -19,10 +19,9 @@
         <!-- Spring Boot and Cloud versions -->
         <spring-boot.version>3.3.3</spring-boot.version>
         <spring-cloud.version>2023.0.3</spring-cloud.version>
-        <spring-cloud-alibaba.version>2023.0.1.2</spring-cloud-alibaba.version>
         
         <!-- Dependencies versions -->
-        <nacos.version>2023.0.1.2</nacos.version>
+        <eureka.version>4.1.3</eureka.version>
         <gateway.version>4.1.4</gateway.version>
         <openfeign.version>4.1.3</openfeign.version>
         <loadbalancer.version>4.1.4</loadbalancer.version>
@@ -38,6 +37,7 @@
 
     <modules>
         <module>common</module>
+        <module>eureka-server</module>
         <module>api-gateway</module>
         <module>auth-center</module>
         <module>user-service</module>
@@ -62,15 +62,6 @@
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
                 <version>${spring-cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- Spring Cloud Alibaba BOM -->
-            <dependency>
-                <groupId>com.alibaba.cloud</groupId>
-                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
-                <version>${spring-cloud-alibaba.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

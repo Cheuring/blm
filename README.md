@@ -1,6 +1,6 @@
 # 饱了么外卖平台微服务架构
 
-基于Spring Boot 3.3 + Spring Cloud 2023 + Spring Cloud Alibaba的微服务架构实现。
+基于Spring Boot 3.3 + Spring Cloud 2023 + Eureka的微服务架构实现。
 
 ## 项目结构
 
@@ -16,6 +16,7 @@ micro1/
 │   │   ├── util/             # 工具类 (JWT等)
 │   │   ├── feign/            # Feign客户端接口
 │   │   └── exception/        # 异常处理
+├── eureka-server/            # Eureka注册中心
 ├── api-gateway/              # API网关
 ├── auth-center/              # 认证中心
 ├── user-service/             # 用户服务
@@ -25,14 +26,23 @@ micro1/
 
 ## 微服务说明
 
-### 1. 公共模块 (common)
+### 1. Eureka注册中心 (eureka-server)
+**职责**: 服务注册与发现
+- **端口**: 8761
+- **主要功能**:
+  - 服务注册
+  - 服务发现
+  - 健康检查
+  - 服务实例管理
+
+### 2. 公共模块 (common)
 - 通用的实体类、工具类、常量等
 - 统一返回结果封装
 - JWT工具类
 - Feign客户端接口
 - 异常处理
 
-### 2. API网关 (api-gateway)
+### 3. API网关 (api-gateway)
 **职责**: 统一入口、路由转发、认证鉴权、限流熔断
 - **端口**: 8080
 - **主要功能**:
@@ -41,7 +51,7 @@ micro1/
   - 跨域处理
   - 负载均衡
 
-### 3. 认证中心 (auth-center)
+### 4. 认证中心 (auth-center)
 **职责**: 统一认证、Token管理
 - **端口**: 8082
 - **主要功能**:
@@ -50,7 +60,7 @@ micro1/
   - Token刷新
   - 用户登出
 
-### 4. 用户服务 (user-service)
+### 5. 用户服务 (user-service)
 **职责**: 用户注册、信息管理、地址管理
 - **数据库**: user_db
 - **端口**: 8081
@@ -63,8 +73,7 @@ micro1/
 
 - **基础框架**: Spring Boot 3.3.3
 - **微服务**: Spring Cloud 2023.0.3
-- **服务注册与发现**: Nacos
-- **配置中心**: Nacos Config
+- **服务注册与发现**: Eureka
 - **API网关**: Spring Cloud Gateway
 - **服务调用**: OpenFeign + LoadBalancer
 - **数据库**: MySQL 8.0
@@ -80,23 +89,54 @@ micro1/
 - JDK 21
 - MySQL 8.0+
 - Redis 6.0+
-- Nacos 2.3+
 
-### 2. 启动Nacos
-```bash
-# 下载Nacos Server
-# 启动Nacos (单机模式)
-sh startup.sh -m standalone
-```
-
-访问Nacos控制台: http://localhost:8848/nacos
-- 用户名: nacos
-- 密码: nacos
-
-### 3. 初始化数据库
+### 2. 初始化数据库
 ```bash
 mysql -u root -p < db/init-microservices.sql
 ```
+
+### 3. 启动服务
+
+#### 方式一：使用启动脚本（推荐）
+```bash
+# 启动基础服务（Eureka + 认证 + 网关 + 用户服务）
+start-eureka-services.bat
+
+# 或启动全部服务
+start-all-eureka-services.bat
+```
+
+#### 方式二：手动启动
+按以下顺序启动各个服务：
+
+1. **启动Eureka注册中心**
+```bash
+cd eureka-server
+mvn spring-boot:run
+```
+
+2. **启动认证中心**
+```bash
+cd auth-center
+mvn spring-boot:run
+```
+
+3. **启动API网关**
+```bash
+cd api-gateway
+mvn spring-boot:run
+```
+
+4. **启动用户服务**
+```bash
+cd user-service
+mvn spring-boot:run
+```
+
+### 4. 访问地址
+- **Eureka控制台**: http://localhost:8761
+- **API网关**: http://localhost:8080
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
 
 ### 4. 启动服务
 按以下顺序启动各个服务：

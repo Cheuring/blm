@@ -1,5 +1,7 @@
 package com.blm.user.controller;
 
+import com.blm.common.dto.FavoriteDTO;
+import com.blm.common.entity.Favorite;
 import com.blm.common.result.Result;
 import com.blm.common.vo.FoodVO;
 import com.blm.common.vo.PageVO;

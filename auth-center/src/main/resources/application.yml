@@ -4,18 +4,6 @@ server:
 spring:
   application:
     name: auth-center
-  config:
-    import:
-      - optional:nacos:application-${spring.application.name}.yml
-  cloud:
-    nacos:
-      discovery:
-        server-addr: localhost:8848
-        namespace: blm-microservices
-      config:
-        server-addr: localhost:8848
-        namespace: blm-microservices
-        file-extension: yml
 
   # Redis配置
   data:
@@ -30,6 +18,20 @@ spring:
           max-active: 8
           max-idle: 8
           min-idle: 0
+
+# Eureka配置
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 5
+    eureka-service-url-poll-interval-seconds: 60
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
 
 # JWT配置
 jwt:
@@ -54,3 +56,6 @@ management:
 logging:
   level:
     com.blm: debug
+    org.springframework.cloud.openfeign: debug
+    com.netflix.discovery: debug
+    com.netflix.loadbalancer: debug

@@ -1,6 +1,8 @@
 package com.blm.user.controller;
 
+import com.blm.common.dto.HistoryDTO;
 import com.blm.common.result.Result;
+import com.blm.common.vo.FoodVO;
 import com.blm.common.vo.PageVO;
 import com.blm.common.vo.StoreVO;
 import com.blm.user.service.HistoryService;

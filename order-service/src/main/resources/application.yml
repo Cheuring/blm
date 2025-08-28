@@ -3,15 +3,6 @@ spring:
     name: order-service
   profiles:
     active: dev
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 127.0.0.1:8848
-        namespace: dev
-      config:
-        server-addr: 127.0.0.1:8848
-        file-extension: yml
-        namespace: dev
   datasource:
     url: jdbc:mysql://localhost:3306/order_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
     username: root
@@ -29,6 +20,18 @@ spring:
 
 server:
   port: 8084
+
+# Eureka配置
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml

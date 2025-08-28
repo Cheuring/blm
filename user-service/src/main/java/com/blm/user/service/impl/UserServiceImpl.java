@@ -35,9 +35,9 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByUsername(registerDTO.getUsername())) {
             throw new CommonException(ExceptionConstant.USER_ALREADY_EXISTS);
         }
-        if (userRepository.existsByPhone(registerDTO.getPhone())) {
-            throw new CommonException(ExceptionConstant.USER_PHONE_ALREADY_REGISTERED);
-        }
+//        if (userRepository.existsByPhone(registerDTO.getPhone())) {
+//            throw new CommonException(ExceptionConstant.USER_PHONE_ALREADY_REGISTERED);
+//        }
 
         User user = new User();
         BeanUtils.copyProperties(registerDTO, user);

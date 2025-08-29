@@ -1,6 +1,7 @@
 package com.blm.order.repository;
 
 import com.blm.common.entity.Review;
+import com.blm.common.vo.RatingAggregateVO;
 import lombok.Data;
 import org.apache.ibatis.annotations.*;
 
@@ -13,12 +14,6 @@ import java.util.Optional;
  */
 @Mapper
 public interface ReviewRepository {
-
-    @Data
-    class RatingAggregation {
-        private Integer rating;
-        private Long count;
-    }
 
     /**
      * 添加/更新评价
@@ -159,5 +154,5 @@ public interface ReviewRepository {
     @Select("SELECT store_rating AS rating, COUNT(*) AS count " +
             "FROM review WHERE store_id = #{storeId} " +
             "GROUP BY store_rating")
-    List<RatingAggregation> aggregateRatingsByStoreId(Long storeId);
+    List<RatingAggregateVO> aggregateRatingsByStoreId(Long storeId);
 }

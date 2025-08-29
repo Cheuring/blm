@@ -59,12 +59,12 @@ public interface OrderItemRepository {
      * @return 包含商品ID、商品名称、店铺名称和销售数量的对象数组列表
      */
 
-    List<PlatformStatsVO.TopFoodItemVO> findTopSellingFoods();
+    List<PlatformStatsVO.TopFoodItemVO> findTopSellingFoods(@Param("limit") Integer limit);
 
 
     /**
      * @param storeId
      * @return
      */
-    List<StoreStatisticsVO.HotFoodVO> StoreFindTopSellingFoods(@Param("storeId") Long storeId);
+    List<StoreStatisticsVO.HotFoodVO> StoreFindTopSellingFoods(@Param("storeId") Long storeId, @Param("limit") Integer limit);
 }

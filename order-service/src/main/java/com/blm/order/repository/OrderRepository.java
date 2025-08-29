@@ -153,7 +153,7 @@ public interface OrderRepository {
      */
     List<GoodsSalesDTO> findTop10ByStore(Long storeId, LocalDateTime begin, LocalDateTime end, Order.OrderStatus status);
 
-    List<PlatformStatsVO.TopStoreItemVO> findTopStores();
+    List<PlatformStatsVO.TopStoreItemVO> findTopStores(int limit);
 
 
     /**

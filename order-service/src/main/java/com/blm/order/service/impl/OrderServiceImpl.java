@@ -411,4 +411,11 @@ public class OrderServiceImpl implements OrderService {
 
         return dto;
     }
+
+    @Override
+    public PageVO<OrderVO> findByConditions(Order.OrderStatus status, Long userId, Long storeId, Long riderId, int page, int size) {
+        PageHelper.startPage(page, size);
+        List<Order> byConditions = orderRepository.findByConditions(status, userId, storeId, riderId);
+        return getPageVO(page, size, byConditions);
+    }
 }

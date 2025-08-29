@@ -103,4 +103,6 @@ public interface OrderService {
     OrderDetailVO getOrderDetail(Long orderId);
 
     LocationUpdateDTO getRiderLocation(Long userId, Long orderId);
+
+    PageVO<OrderVO> findByConditions(Order.OrderStatus status, Long userId, Long storeId, Long riderId, int page, int size);
 }

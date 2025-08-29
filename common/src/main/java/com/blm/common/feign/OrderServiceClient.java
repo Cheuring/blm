@@ -53,8 +53,8 @@ public interface OrderServiceClient {
     @GetMapping("/reviews/store/{storeId}")
     Optional<List<Review>> getReviewsByStoreId(
             @PathVariable("storeId") Long storeId,
-            @RequestParam("page") Integer page,
-            @RequestParam("size") Integer size
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size
     );
 
     @GetMapping("/reviews/store/{storeId}/rate")
@@ -152,8 +152,8 @@ public interface OrderServiceClient {
             @RequestParam(value = "userId", required = false) Long userId,
             @RequestParam(value = "storeId", required = false) Long storeId,
             @RequestParam(value = "foodId", required = false) Long foodId,
-            @RequestParam("page") int page,
             @RequestParam(value = "rating", required = false) Integer rating,
+            @RequestParam("page") int page,
             @RequestParam("size") int size
     );
 

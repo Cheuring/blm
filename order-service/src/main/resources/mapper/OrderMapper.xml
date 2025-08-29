@@ -63,6 +63,7 @@
         WHERE o.status like 'COMPLETED'
         GROUP BY o.store_id
         ORDER BY total_amount DESC
+        LIMIT #{limit}
     </select>
     <select id="findByStoreIdAndStatus" resultType="com.blm.common.entity.Order">
         SELECT * FROM orders

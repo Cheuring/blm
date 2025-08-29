@@ -32,6 +32,7 @@
         WHERE o.status like 'COMPLETED'
         GROUP BY oi.food_id
         ORDER BY total_quantity DESC
+        LIMIT #{limit}
     </select>
     <select id="StoreFindTopSellingFoods" resultMap="topFoodItemVOResultMap2">
         SELECT

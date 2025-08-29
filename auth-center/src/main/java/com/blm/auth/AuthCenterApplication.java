@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 /**
  * 认证中心启动类
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.blm.auth", "com.blm.common"})
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.blm.common.feign")
 public class AuthCenterApplication {

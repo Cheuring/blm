@@ -62,13 +62,13 @@ public interface StoreRepository {
             @Param("keyword") String keyword);
     
     @Update("UPDATE store SET status = #{status}, updated_at = #{updatedAt} WHERE id = #{id}")
-    int updateStoreStatus(@Param("id") Long id, @Param("status") String status, @Param("updatedAt") LocalDateTime updatedAt);
+    int updateStoreStatus(@Param("id") Long id, @Param("status") Store.StoreStatus status, @Param("updatedAt") LocalDateTime updatedAt);
 
     /**
      * 根据状态和关键字查询店铺列表（支持PageHelper）
      */
     List<Store> findByStatusAndKeyword(
-            @Param("status") String status,
+            @Param("status") Store.StoreStatus status,
             @Param("keyword") String keyword);
     
     /**
@@ -81,6 +81,12 @@ public interface StoreRepository {
      */
     @Update("UPDATE store SET reject_reason = #{reason}, updated_at = NOW() WHERE id = #{storeId}")
     int setRejectReason(@Param("storeId") Long storeId, @Param("reason") String reason);
+
+    /**
+     * 更新店铺评分
+     */
+    @Update("UPDATE store SET rating = #{rating}, updated_at = #{updatedAt} WHERE id = #{storeId}")
+    int updateRating(@Param("storeId") Long storeId, @Param("rating") double rating, @Param("updatedAt") LocalDateTime updatedAt);
 
     List<Store> findByFilters(StoreQueryDTO queryDTO);
 

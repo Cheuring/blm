@@ -6,7 +6,7 @@ import com.blm.common.exception.CommonException;
 import com.blm.common.result.ExceptionConstant;
 import com.blm.common.service.BaseService;
 import com.blm.common.vo.FoodCategoryVO;
-import com.blm.store.repository.CategoryRepository;
+import com.blm.store.repository.FoodCategoryRepository;
 import com.blm.store.service.FoodCategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -22,7 +22,7 @@ import java.util.List;
 public class FoodCategoryServiceImpl extends BaseService implements FoodCategoryService {
 
     @Autowired
-    private CategoryRepository categoryRepository;
+    private FoodCategoryRepository categoryRepository;
 
     @Override
     public List<FoodCategoryVO> getCategoriesByStoreId(Long storeId) {

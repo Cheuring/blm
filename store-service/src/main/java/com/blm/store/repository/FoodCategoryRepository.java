@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.*;
 import java.util.List;
 
 @Mapper
-public interface CategoryRepository {
+public interface FoodCategoryRepository {
 
     @Select("SELECT * FROM food_category WHERE store_id = #{storeId}")
     List<FoodCategory> findByStoreId(Long storeId);

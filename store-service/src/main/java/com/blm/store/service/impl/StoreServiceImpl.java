@@ -9,7 +9,7 @@ import com.blm.common.feign.OrderServiceClient;
 import com.blm.common.result.ExceptionConstant;
 import com.blm.common.service.BaseService;
 import com.blm.common.vo.*;
-import com.blm.store.repository.CategoryRepository;
+import com.blm.store.repository.FoodCategoryRepository;
 import com.blm.store.repository.FoodRepository;
 import com.blm.store.repository.StoreRepository;
 import com.blm.store.service.FoodCategoryService;
@@ -37,7 +37,7 @@ public class StoreServiceImpl extends BaseService implements StoreService {
     @Autowired
     private FoodCategoryService foodCategoryService;
     @Autowired
-    private CategoryRepository categoryRepository;
+    private FoodCategoryRepository categoryRepository;
 
     @Override
     public PageVO<StoreVO> listStores(StoreQueryDTO queryDTO) {

@@ -2,77 +2,93 @@ package com.blm.store.service.impl;
 
 import com.blm.common.dto.FoodCategoryDTO;
 import com.blm.common.entity.FoodCategory;
-import com.blm.common.exception.BusinessException;
+import com.blm.common.exception.CommonException;
+import com.blm.common.result.ExceptionConstant;
+import com.blm.common.service.BaseService;
 import com.blm.common.vo.FoodCategoryVO;
-import com.blm.store.repository.FoodCategoryRepository;
+import com.blm.store.repository.CategoryRepository;
 import com.blm.store.service.FoodCategoryService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class FoodCategoryServiceImpl implements FoodCategoryService {
-    
-    private final FoodCategoryRepository foodCategoryRepository;
-    
+public class FoodCategoryServiceImpl extends BaseService implements FoodCategoryService {
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
     @Override
     public List<FoodCategoryVO> getCategoriesByStoreId(Long storeId) {
-        List<FoodCategory> categories = foodCategoryRepository.findByStoreId(storeId);
-        return categories.stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
+        List<FoodCategory> categories = categoryRepository.findByStoreId(storeId);
+        return entity2VO(categories, FoodCategoryVO.class);
     }
-    
+
     @Override
     @Transactional
     public FoodCategoryVO addCategory(Long storeId, FoodCategoryDTO dto) {
         FoodCategory category = new FoodCategory();
-        BeanUtils.copyProperties(dto, category);
         category.setStoreId(storeId);
-        
+        category.setName(dto.getName());
+        category.setSort(dto.getSort());
+
         LocalDateTime now = LocalDateTime.now();
         category.setCreatedAt(now);
         category.setUpdatedAt(now);
-        
-        foodCategoryRepository.insert(category);
+
+        categoryRepository.insert(category);
         log.info("添加商品分类成功，storeId={}，categoryId={}", storeId, category.getId());
-        
+
         return convertToVO(category);
     }
-    
+
     @Override
     @Transactional
     public FoodCategoryVO updateCategory(Long storeId, Long categoryId, FoodCategoryDTO dto) {
-        FoodCategory category = foodCategoryRepository.findByIdAndStoreId(categoryId, storeId)
-                .orElseThrow(() -> new BusinessException("商品分类不存在"));
-        
-        BeanUtils.copyProperties(dto, category);
+        FoodCategory category = categoryRepository.findById(categoryId);
+        if (category == null) {
+            throw new CommonException(ExceptionConstant.FOOD_CATEGORY_NOT_FOUND);
+        }
+
+        if (!category.getStoreId().equals(storeId)) {
+            throw new CommonException(ExceptionConstant.FOOD_CATEGORY_UNAUTHORIZED);
+        }
+
+        category.setName(dto.getName());
+        category.setSort(dto.getSort());
         category.setUpdatedAt(LocalDateTime.now());
-        
-        foodCategoryRepository.update(category);
-        log.info("更新商品分类成功，storeId={}，categoryId={}", storeId, categoryId);
-        
+
+        categoryRepository.update(category);
+        log.info("更新商品分类成功，categoryId={}", categoryId);
+
         return convertToVO(category);
     }
-    
+
     @Override
     @Transactional
     public void deleteCategory(Long storeId, Long categoryId) {
-        int deleted = foodCategoryRepository.delete(categoryId, storeId);
-        if (deleted == 0) {
-            throw new BusinessException("商品分类不存在");
+        FoodCategory category = categoryRepository.findById(categoryId);
+        if (category == null) {
+            throw new CommonException(ExceptionConstant.FOOD_CATEGORY_NOT_FOUND);
         }
-        log.info("删除商品分类成功，storeId={}，categoryId={}", storeId, categoryId);
+
+        if (!category.getStoreId().equals(storeId)) {
+            throw new CommonException(ExceptionConstant.FOOD_CATEGORY_UNAUTHORIZED);
+        }
+
+        categoryRepository.delete(categoryId, storeId);
+        log.info("删除商品分类成功，categoryId={}", categoryId);
     }
-    
+
+    /**
+     * 将实体对象转换为VO对象
+     */
     private FoodCategoryVO convertToVO(FoodCategory category) {
         FoodCategoryVO vo = new FoodCategoryVO();
         BeanUtils.copyProperties(category, vo);

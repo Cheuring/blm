@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blm.store.repository.FoodRepository">
+    <update id="update">
+        UPDATE food
+        <set>
+            <if test="categoryId != null">category_id=#{categoryId},</if>
+            <if test="name != null">name=#{name},</if>
+            <if test="price != null">price=#{price},</if>
+            <if test="originalPrice != null">original_price=#{originalPrice},</if>
+            <if test="description != null">description=#{description},</if>
+            <if test="image != null">image=#{image},</if>
+            <if test="status != null">status=#{status},</if>
+            <if test="isFeatured != null">is_featured=#{isFeatured},</if>
+            <if test="updatedAt != null">updated_at=#{updatedAt},</if>
+        </set>
+        WHERE id=#{id} AND store_id=#{storeId}
+    </update>
+    <!-- 根据状态、关键字和店铺ID查询商品列表（支持PageHelper） -->
+    <select id="findByStatusAndKeywordAndStoreId" resultType="com.blm.common.entity.Food">
+        SELECT * FROM food
+        WHERE 1=1
+        <if test="storeId != null">AND store_id = #{storeId}</if>
+        <if test="status != null">AND status = #{status}</if>
+        <if test="keyword != null and keyword != ''">
+            AND (name LIKE CONCAT('%',#{keyword},'%')
+            OR description LIKE CONCAT('%',#{keyword},'%'))
+        </if>
+        ORDER BY created_at DESC
+    </select>
+    
+    <!-- 保存商品信息（插入或更新） -->
+    <insert id="save" parameterType="com.blm.common.entity.Food" useGeneratedKeys="true" keyProperty="id">
+        <if test="id == null">
+            INSERT INTO food(
+                store_id, category_id, name, price, original_price, description,
+                image, sales, status, is_featured, reject_reason, created_at, updated_at
+            ) VALUES (
+                #{storeId}, #{categoryId}, #{name}, #{price}, #{originalPrice}, #{description},
+                #{image}, #{sales}, #{status}, #{isFeatured}, #{rejectReason}, #{createdAt}, #{updatedAt}
+            )
+        </if>
+        <if test="id != null">
+            UPDATE food SET
+                store_id = #{storeId},
+                category_id = #{categoryId},
+                name = #{name},
+                price = #{price},
+                original_price = #{originalPrice},
+                description = #{description},
+                image = #{image},
+                status = #{status},
+                is_featured = #{isFeatured},
+                <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
+                <if test="sales != null">sales = #{sales},</if>
+                updated_at = #{updatedAt}
+            WHERE id = #{id}
+        </if>
+    </insert>
+</mapper>

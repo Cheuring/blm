@@ -72,7 +72,7 @@
         </if>
         ORDER BY created_at DESC
     </select>
-    <select id="findTop10ByStore" resultType="com.blm.dto.GoodsSalesDTO">
+    <select id="findTop10ByStore" resultType="com.blm.common.dto.GoodsSalesDTO">
         select od.food_name name, sum(od.quantity) number
         from order_detail od,
              orders o

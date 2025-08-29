@@ -1,50 +1,60 @@
 package com.blm.store.service;
 
-import com.blm.common.dto.StoreCreateDTO;
+import com.blm.common.dto.StoreQueryDTO;
 import com.blm.common.entity.Store;
-import com.blm.common.vo.StoreVO;
-import com.blm.common.vo.StoreCategoryVO;
+import com.blm.common.vo.*;
+
 import java.util.List;
 
 public interface StoreService {
-    
+
     /**
-     * 根据ID获取店铺信息
+     * 根据条件分页查询店铺列表
+     *
+     * @param queryDTO 查询条件
+     * @return 分页后的店铺列表
      */
-    StoreVO getStoreById(Long storeId);
-    
+    PageVO<StoreVO> listStores(StoreQueryDTO queryDTO);
+
     /**
-     * 获取店铺实体
+     * 获取推荐店铺列表
+     *
+     * @param longitude 用户当前经度 (可选)
+     * @param latitude  用户当前纬度 (可选)
+     * @return 推荐店铺列表
      */
-    Store getStoreEntity(Long storeId);
-    
+    List<StoreVO> listRecommended(Double longitude, Double latitude);
+
     /**
-     * 创建店铺
+     * 获取店铺详细信息
+     *
+     * @param storeId 店铺ID
+     * @return 店铺详细信息
      */
-    StoreVO createStore(Long merchantId, StoreCreateDTO dto);
-    
+    StoreDetailVO getStoreDetail(Long storeId);
+
     /**
-     * 更新店铺信息
+     * 获取店铺内商品列表
+     *
+     * @param storeId    店铺ID
+     * @param categoryId 商品分类ID (可选)
+     * @return 商品列表
      */
-    StoreVO updateStore(Long storeId, StoreCreateDTO dto);
-    
+    List<FoodVO> listStoreFoods(Long storeId, Long categoryId);
+
     /**
-     * 获取商家的店铺列表
+     * 获取商品详细信息
+     *
+     * @param foodId 商品ID
+     * @return 商品详细信息 (包含评价)
      */
-    List<StoreVO> getStoresByMerchantId(Long merchantId);
-    
-    /**
-     * 获取店铺分类列表
-     */
-    List<StoreCategoryVO> getStoreCategories();
-    
-    /**
-     * 获取店铺所有者ID
-     */
+    FoodDetailVO getFoodDetail(Long foodId); // Changed return type to FoodDetailVO
+
     Long getStoreOwnerId(Long storeId);
-    
-    /**
-     * 验证商家对店铺的所有权
-     */
-    void verifyStoreOwnership(Long storeId, Long merchantId);
+
+    Store getStoreById(Long storeId);
+
+    void verifyStoreOwner(Long storeId, Long userId);
+
+    List<StoreCategoryVO> listStoreCategories();
 }

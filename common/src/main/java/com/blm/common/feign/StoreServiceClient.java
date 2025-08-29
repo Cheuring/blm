@@ -2,11 +2,15 @@ package com.blm.common.feign;
 
 import com.blm.common.entity.Food;
 import com.blm.common.entity.Store;
+import com.blm.common.entity.StoreCategory;
+import com.blm.common.vo.FoodVO;
+import com.blm.common.vo.PageVO;
+import com.blm.common.vo.StoreCategoryVO;
+import com.blm.common.vo.StoreVO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -35,4 +39,69 @@ public interface StoreServiceClient {
 
     @GetMapping("/{storeId}/owner")
     Optional<Long> getStoreOwnerIdByStoreId(@PathVariable("storeId") Long storeId);
+
+    @GetMapping("/")
+    Optional<PageVO<StoreVO>> getStoreByConditions(
+            @RequestParam(value = "status", required = false) Store.StoreStatus status,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam("page") int page,
+            @RequestParam("size") int size
+    );
+
+    @GetMapping("/{storeId}/foods")
+    Optional<PageVO<FoodVO>> getFoodByConditions(
+            @PathVariable("storeId") Long storeId,
+            @RequestParam(value = "status", required = false) Food.FoodStatus status,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam("page") int page,
+            @RequestParam("size") int size
+    );
+
+    @PutMapping("/{storeId}/audit")
+    int auditStore(
+            @PathVariable("storeId") Long storeId,
+            @RequestParam(value = "status", required = false) Store.StoreStatus status,
+            @RequestParam(value = "reason", required = false) String reason,
+            @RequestParam("updateAt") LocalDateTime updateAt
+            );
+
+    @PutMapping("/food/{foodId}/audit")
+    int auditFood(
+            @PathVariable("foodId") Long foodId,
+            @RequestParam(value = "status", required = false) Food.FoodStatus status,
+            @RequestParam(value = "reason", required = false) String reason,
+            @RequestParam("updateAt") LocalDateTime updateAt
+    );
+
+    @PutMapping("/{storeId}/rating")
+    int updateStoreRating(
+            @PathVariable("storeId") Long storeId,
+            @RequestParam("newRating") double newRating,
+            @RequestParam("updateAt") LocalDateTime updateAt
+    );
+    
+    @GetMapping("/category")
+    Optional<PageVO<StoreCategoryVO>> getAllStoreCategory(
+            @RequestParam(value = "page") int page,
+            @RequestParam(value = "size") int size
+    );
+
+    @GetMapping("/category/{id}")
+    Optional<StoreCategory> getStoreCategoryById(
+            @PathVariable("id") Long id
+    );
+
+    @PutMapping("/category/{id}")
+    Optional<StoreCategory> updateStoreCategory(
+            @PathVariable("id") Long id,
+            @RequestBody StoreCategory storeCategory
+    );
+
+    @DeleteMapping("/category/{id}")
+    int deleteStoreCategoryById(
+            @PathVariable("id") Long id
+    );
+
+    @PostMapping("/category")
+    Optional<StoreCategory> addStoreCategory(@RequestBody StoreCategory storeCategory);
 }

@@ -125,7 +125,7 @@ public class MerchantStatisticsServiceImpl implements MerchantStatisticsService 
         StoreOrderReportVO dailyOrderTrendVO = new StoreOrderReportVO(StringUtils.join(dateList, ","), StringUtils.join(totalOrderList, ","), StringUtils.join(newOrderList, ","));
 
         // 获取热门商品排行
-        List<StoreStatisticsVO.HotFoodVO> topFoodsData = orderService.getTopSellingFoods(storeId, 10)
+        List<StoreStatisticsVO.HotFoodVO> topFoodsData = orderService.getStoreTopSellingFoods(storeId, 10)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
         System.out.println(topFoodsData);
         List<StoreStatisticsVO.HotFoodVO> topFoods = topFoodsData.stream()

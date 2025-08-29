@@ -4,10 +4,7 @@ import com.blm.common.entity.Order;
 import com.blm.common.entity.Review;
 import com.blm.common.vo.*;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -47,14 +44,17 @@ public interface OrderServiceClient {
             @RequestParam("date") LocalDate date
     );
 
+    @GetMapping("/reviews/{reviewId}")
+    Optional<Review> getReviewsById(@PathVariable("reviewId") Long reviewId);
+
     @GetMapping("/reviews/food/{foodId}")
     Optional<List<Review>> getReviewsByFoodId(@PathVariable("foodId") Long foodId);
 
     @GetMapping("/reviews/store/{storeId}")
     Optional<List<Review>> getReviewsByStoreId(
             @PathVariable("storeId") Long storeId,
-            @RequestParam("page") int page,
-            @RequestParam("size") int size
+            @RequestParam("page") Integer page,
+            @RequestParam("size") Integer size
     );
 
     @GetMapping("/reviews/store/{storeId}/rate")
@@ -95,8 +95,18 @@ public interface OrderServiceClient {
     );
 
     @GetMapping("/store/{storeId}/food/top")
-    Optional<List<StoreStatisticsVO.HotFoodVO>> getTopSellingFoods(
+    Optional<List<StoreStatisticsVO.HotFoodVO>> getStoreTopSellingFoods(
             @PathVariable("storeId") Long storeId,
+            @RequestParam("limit") int limit
+    );
+
+    @GetMapping("/food/top")
+    Optional<List<PlatformStatsVO.TopFoodItemVO>> getTopSellingFoods(
+            @RequestParam("limit") int limit
+    );
+
+    @GetMapping("/store/top")
+    Optional<List<PlatformStatsVO.TopStoreItemVO>> getTopStores(
             @RequestParam("limit") int limit
     );
 
@@ -117,11 +127,51 @@ public interface OrderServiceClient {
             @RequestParam("orderId") Long orderId
     );
 
+    @GetMapping("/detail/{orderId}")
+    Optional<OrderDetailVO> getOrderDetail(@PathVariable("orderId") Long orderId);
+
     @PutMapping("/{orderId}/store/{storeId}/status")
     int updateOrderStatusByStore(
             @PathVariable("orderId") Long orderId,
             @PathVariable("storeId") Long storeId,
             @RequestParam("status") Order.OrderStatus status
+    );
+
+    @GetMapping("/")
+    Optional<PageVO<OrderVO>> getOrderByConditions(
+            @RequestParam(value = "status", required = false) Order.OrderStatus status,
+            @RequestParam(value = "userId", required = false) Long userId,
+            @RequestParam(value = "storeId", required = false) Long storeId,
+            @RequestParam(value = "riderId", required = false) Long riderId,
+            @RequestParam("page") int page,
+            @RequestParam("size") int size
+    );
+
+    @GetMapping("/reviews")
+    Optional<PageVO<ReviewVO>> getReviewByConditions(
+            @RequestParam(value = "userId", required = false) Long userId,
+            @RequestParam(value = "storeId", required = false) Long storeId,
+            @RequestParam(value = "foodId", required = false) Long foodId,
+            @RequestParam("page") int page,
+            @RequestParam(value = "rating", required = false) Integer rating,
+            @RequestParam("size") int size
+    );
+
+    @DeleteMapping("/reviews/{reviewId}")
+    int deleteReviewById(@PathVariable("reviewId") Long reviewId);
+
+    @GetMapping("/count")
+    Optional<Long> countOrder(
+            @RequestParam(value = "status", required = false) Order.OrderStatus status,
+            @RequestParam(value = "start", required = false) LocalDateTime start,
+            @RequestParam(value = "end", required = false) LocalDateTime end
+    );
+
+    @GetMapping("/sum")
+    Optional<BigDecimal> sumOrder(
+            @RequestParam(value = "status", required = false) Order.OrderStatus status,
+            @RequestParam(value = "start", required = false) LocalDateTime start,
+            @RequestParam(value = "end", required = false) LocalDateTime end
     );
 
 }

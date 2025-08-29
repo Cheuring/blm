@@ -3,6 +3,7 @@ package com.blm.common.feign;
 import com.blm.common.dto.RegisterDTO;
 import com.blm.common.entity.User;
 import com.blm.common.entity.UserAddress;
+import com.blm.common.vo.PageVO;
 import com.blm.common.vo.UserVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
@@ -39,4 +40,23 @@ public interface UserServiceClient {
 
     @PutMapping("/{userId}/role")
     int updateRole(@PathVariable("userId") Long userId, @RequestParam("role") String role);
+
+    @PutMapping("/{userId}/status")
+    int updateStatus(@PathVariable("userId") Long userId, @RequestParam("status") Integer status);
+
+    @GetMapping("/")
+    Optional<PageVO<UserVO>> getByConditions(
+            @RequestParam(value = "role", required = false) User.UserRole role,
+            @RequestParam(value = "status", required = false) Integer status,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam("page") int page,
+            @RequestParam("size") int size
+    );
+
+    @GetMapping("/count")
+    Optional<Long> countUser(
+            @RequestParam(value = "role", required = false) User.UserRole role,
+            @RequestParam(value = "start", required = false) LocalDateTime start,
+            @RequestParam(value = "end", required = false) LocalDateTime end
+    );
 }

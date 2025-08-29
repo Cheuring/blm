@@ -19,7 +19,7 @@ import java.util.Optional;
 public interface RiderServiceClient {
 
     @GetMapping("/{riderId}")
-    Optional<Rider> getRiderById(@PathVariable Long riderId);
+    Optional<Rider> getRiderById(@PathVariable("riderId") Long riderId);
 
     @GetMapping("/")
     Optional<PageVO<RiderVO>> getRiderByConditions(

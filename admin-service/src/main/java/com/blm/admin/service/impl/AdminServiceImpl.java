@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -75,7 +74,6 @@ public class AdminServiceImpl extends BaseService implements AdminService {
      * 更新用户状态
      */
     @Override
-    @Transactional
     public void updateUserStatus(Long userId, AuditDTO dto) {
         User user = userService.getUserById(userId)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.USER_NOT_FOUND));
@@ -121,7 +119,6 @@ public class AdminServiceImpl extends BaseService implements AdminService {
      * 审核店铺
      */
     @Override
-    @Transactional
     public void auditStore(Long storeId, AuditDTO dto) {
         Store store = storeService.getStoreById(storeId)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.STORE_NOT_FOUND));
@@ -168,7 +165,6 @@ public class AdminServiceImpl extends BaseService implements AdminService {
      * 审核商品
      */
     @Override
-    @Transactional
     public void auditFood(Long foodId, AuditDTO dto) {
         Food food = storeService.getFoodById(foodId)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.FOOD_NOT_FOUND));
@@ -215,7 +211,6 @@ public class AdminServiceImpl extends BaseService implements AdminService {
      * 更新骑手状态
      */
     @Override
-    @Transactional
     public void updateRiderStatus(Long riderId, AuditDTO dto) {
         Rider rider = riderService.getRiderById(riderId)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.RIDER_NOT_FOUND));
@@ -272,7 +267,6 @@ public class AdminServiceImpl extends BaseService implements AdminService {
      * 删除评价
      */
     @Override
-    @Transactional
     public void deleteReview(Long reviewId) {
         Review review = orderService.getReviewsById(reviewId)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.REVIEW_NOT_FOUND));

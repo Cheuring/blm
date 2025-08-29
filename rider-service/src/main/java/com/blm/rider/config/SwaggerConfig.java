@@ -26,7 +26,7 @@ public class SwaggerConfig {
                                 .name("BLM Team")
                                 .email("support@blm.com")))
                 .servers(List.of(
-                        new Server().url("http://localhost:8085").description("本地开发环境"),
+                        new Server().url("http://localhost:8083").description("本地开发环境"),
                         new Server().url("http://localhost:8080").description("网关环境")
                 ));
     }

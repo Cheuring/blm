@@ -19,10 +19,10 @@
 
     <!-- 查询销量最高的商品 -->
     <select id="findTopSellingFoods" resultMap="topFoodItemVOResultMap">
-        SELECT 
+        SELECT
             oi.food_id as food_id,
-            oi.food_name as food_name,
-            o.store_id as store_id,
+            MIN(oi.food_name) as food_name,
+            MIN(o.store_id) as store_id,
             SUM(oi.quantity) as total_quantity,
             SUM(oi.price * oi.quantity) as total_sales
         FROM order_detail oi

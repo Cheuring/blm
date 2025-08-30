@@ -26,7 +26,6 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.blm.common.dto.AuditDTO.AuditStatus.APPROVED;
 import static com.blm.common.dto.AuditDTO.AuditStatus.SUSPENDED;
@@ -282,13 +281,15 @@ public class AdminServiceImpl extends BaseService implements AdminService {
      * 更新店铺评分 todo: 性能太低
      */
     private void updateStoreRating(Long storeId) {
-        List<Review> reviews = orderService.getReviewsByStoreId(storeId, null, null)
+        PageVO<ReviewVO> reviewVOPageVO = orderService.getReviewsByStoreId(storeId, 1, 100)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
+
+        List<ReviewVO> reviews = reviewVOPageVO.getContent();
         if (reviews == null || reviews.isEmpty()) {
             return;
         }
 
-        double avgRating = reviews.stream().mapToInt(Review::getStoreRating).average().orElse(0);
+        double avgRating = reviews.stream().mapToInt(ReviewVO::getStoreRating).average().orElse(0);
         Store store = storeService.getStoreById(storeId)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.STORE_NOT_FOUND));
 
@@ -389,36 +390,18 @@ public class AdminServiceImpl extends BaseService implements AdminService {
 
             // 交易额
             BigDecimal orderAmount = orderService.sumOrder(Order.OrderStatus.COMPLETED, periodStart, periodEnd).orElse(BigDecimal.ZERO);
-            orderAmountData.put(dateKey, orderAmount != null ? orderAmount : BigDecimal.ZERO);
+            orderAmountData.put(dateKey, orderAmount);
 
             currentDate = nextDate;
         }
 
         // 获取热门商品排行
-        List<PlatformStatsVO.TopFoodItemVO> topFoodsData = orderService.getTopSellingFoods(10)
+        List<PlatformStatsVO.TopFoodItemVO> topFoods = orderService.getTopSellingFoods(10)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
-        List<PlatformStatsVO.TopFoodItemVO> topFoods = topFoodsData.stream()
-                .map(item -> {
-                    Long foodId = item.getFoodId();
-                    String foodName = item.getFoodName();
-                    String storeName = item.getStoreName();
-                    Long salesCount = item.getSalesCount();
-                    return new PlatformStatsVO.TopFoodItemVO(foodId, foodName, storeName, salesCount);
-                })
-                .collect(Collectors.toList());
 
         // 获取热门商家排行
-        List<PlatformStatsVO.TopStoreItemVO> topStoresData = orderService.getTopStores(10)
+        List<PlatformStatsVO.TopStoreItemVO> topStores = orderService.getTopStores(10)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
-        List<PlatformStatsVO.TopStoreItemVO> topStores = topStoresData.stream()
-                .map(item -> {
-                    Long storeId = item.getStoreId();
-                    String storeName = item.getStoreName();
-                    Long orderCount = item.getOrderCount();
-                    BigDecimal salesAmount = item.getSalesAmount();
-                    return new PlatformStatsVO.TopStoreItemVO(storeId, storeName, orderCount, salesAmount);
-                })
-                .collect(Collectors.toList());
 
         // 构建并返回统计数据
         return PlatformStatsVO.builder()

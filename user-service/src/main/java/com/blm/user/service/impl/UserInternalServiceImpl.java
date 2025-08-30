@@ -35,7 +35,7 @@ public class UserInternalServiceImpl extends BaseService implements UserInternal
     }
 
     @Override
-    public int updateRole(Long userId, User.UserRole role) {
+    public int updateRole(Long userId, String role) {
         return userRepository.updateRole(userId, role, LocalDateTime.now());
     }
 

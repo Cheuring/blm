@@ -14,7 +14,7 @@ public interface UserInternalService {
 
     UserAddress findAddressById(Long id);
 
-    int updateRole(Long userId, User.UserRole role);
+    int updateRole(Long userId, String role);
 
     int updateStatus(Long userId, Integer status);
 

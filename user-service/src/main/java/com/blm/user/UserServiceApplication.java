@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 /**
  * 用户服务启动类
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.blm.user", "com.blm.common"})
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.blm.common.feign")
 public class UserServiceApplication {

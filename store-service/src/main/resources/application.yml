@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/store_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
     username: root
-    password: 116688
+    password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
 #  redis:
 #    host: 127.0.0.1
@@ -37,16 +37,43 @@ mybatis:
   mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
+    # 打印 SQL 语句到控制台
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 logging:
   level:
+    # 设置项目包的日志级别为 DEBUG
     com.blm.store: debug
     com.blm.common.feign: debug
+    # MyBatis 相关日志
+    com.blm.store.repository: debug
+    # SQL 日志 - 显示 SQL 语句
+    org.apache.ibatis: debug
+    # 显示 SQL 参数和结果
+    org.mybatis: debug
+    # 数据库连接池日志
+    com.zaxxer.hikari: debug
+    # Spring 数据库事务日志
+    org.springframework.transaction: debug
+    org.springframework.jdbc: debug
     # 启用 Feign 客户端的日志
     org.springframework.cloud.openfeign: debug
     feign: debug
-    root: warn
+    # 显示 HTTP 请求和响应
+    org.apache.http: debug
+    # PageHelper 分页插件日志
+    com.github.pagehelper: debug
+    root: info
+  pattern:
+    # 控制台日志格式，包含线程名、类名、方法名、行号
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %clr([%method:%line]){blue} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+    # 文件日志格式
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50}:[%method:%line] - %msg%n"
+  # 可选：输出到文件
+  file:
+    name: logs/store-service.log
+    max-size: 10MB
+    max-history: 30
     
 feign:
   client:

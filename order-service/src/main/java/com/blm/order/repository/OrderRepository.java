@@ -101,7 +101,7 @@ public interface OrderRepository {
      * 根据状态查询订单总金额
      */
     @Select("SELECT COALESCE(SUM(payment_amount), 0) FROM orders WHERE status = #{status}")
-    BigDecimal sumTotalByStatus(Order.OrderStatus status);
+    BigDecimal sumTotalByStatus(@Param("status") Order.OrderStatus status);
             
     /**
      * 根据状态和创建时间区间查询订单数量
@@ -133,7 +133,7 @@ public interface OrderRepository {
      * @return
      */
     @Select("SELECT COALESCE(SUM(payment_amount), 0) FROM orders WHERE store_id = #{storeId} AND updated_at > #{beginTime} AND updated_at < #{endTime} AND status = #{status}")
-    Double sumByMapMoney(Map map);
+    Double sumByMapMoney(@Param("map") Map<String, Object> map);
 
     /**
      * 商家根据起止日期查询相应店铺的订单量
@@ -141,7 +141,7 @@ public interface OrderRepository {
      * @return
      */
     @Select("SELECT COUNT(*) FROM orders WHERE store_id = #{storeId} AND updated_at > #{beginTime} AND updated_at < #{endTime} AND status = #{status}")
-    Integer sumByMapOrder(Map map);
+    Integer sumByMapOrder(@Param("map") Map<String, Object> map);
 
     /**
      * 店铺统计指定时间销量前十的商品
@@ -151,9 +151,9 @@ public interface OrderRepository {
      * @param end
      * @param status
      */
-    List<GoodsSalesDTO> findTop10ByStore(Long storeId, LocalDateTime begin, LocalDateTime end, Order.OrderStatus status);
+    List<GoodsSalesDTO> findTop10ByStore(@Param("storeId") Long storeId, @Param("begin") LocalDateTime begin, @Param("end") LocalDateTime end, @Param("status") Order.OrderStatus status);
 
-    List<PlatformStatsVO.TopStoreItemVO> findTopStores(int limit);
+    List<PlatformStatsVO.TopStoreItemVO> findTopStores(@Param("limit") int limit);
 
 
     /**
@@ -164,7 +164,7 @@ public interface OrderRepository {
      * @param storeId
      * @return
      */
-    long countStoreByStatusAndCreatedAtBetween(Order.OrderStatus status, @Param("start")LocalDateTime todayStart, @Param("end")LocalDateTime todayEnd, Long storeId);
+    long countStoreByStatusAndCreatedAtBetween(@Param("status") Order.OrderStatus status, @Param("start")LocalDateTime todayStart, @Param("end")LocalDateTime todayEnd, @Param("storeId") Long storeId);
 
     /**
      * 商家根据时间范围获取订单总金额
@@ -174,7 +174,7 @@ public interface OrderRepository {
      * @param storeId
      * @return
      */
-    BigDecimal sumStoreTotalByStatusAndCreatedAtBetween(Order.OrderStatus status, @Param("start")LocalDateTime todayStart,  @Param("end")LocalDateTime todayEnd, Long storeId);
+    BigDecimal sumStoreTotalByStatusAndCreatedAtBetween(@Param("status") Order.OrderStatus status, @Param("start")LocalDateTime todayStart,  @Param("end")LocalDateTime todayEnd, @Param("storeId") Long storeId);
 
     /**
      * 商家根据状态获取总订单数量
@@ -182,7 +182,7 @@ public interface OrderRepository {
      * @param storeId
      * @return
      */
-    long countStoreByStatus(Order.OrderStatus status, Long storeId);
+    long countStoreByStatus(@Param("status") Order.OrderStatus status, @Param("storeId") Long storeId);
 
     /**
      * 商家根据状态获取总订单金额
@@ -190,7 +190,7 @@ public interface OrderRepository {
      * @param storeId
      * @return
      */
-    BigDecimal sumStoreTotalByStatus(Order.OrderStatus status, Long storeId);
+    BigDecimal sumStoreTotalByStatus(@Param("status") Order.OrderStatus status, @Param("storeId") Long storeId);
 
     @Update("UPDATE orders SET payment_type = #{paymentType}, updated_at = #{now} WHERE id = #{orderId} AND user_id = #{userId}")
     int updatePaymentType(@Param("orderId") Long orderId, @Param("userId") Long userId, @Param("paymentType") PaymentDTO.PaymentType paymentType, @Param("now") LocalDateTime now);

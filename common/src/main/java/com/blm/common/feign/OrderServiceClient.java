@@ -4,6 +4,7 @@ import com.blm.common.entity.Order;
 import com.blm.common.entity.Review;
 import com.blm.common.vo.*;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -69,16 +70,16 @@ public interface OrderServiceClient {
     @GetMapping("/store/{storeId}/stats/count")
     Optional<Long> countStoreByStatusAndCreatedAtBetween(
             @RequestParam("status") Order.OrderStatus status,
-            @RequestParam("start") LocalDateTime start,
-            @RequestParam("end") LocalDateTime end,
+            @RequestParam("start") @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime start,
+            @RequestParam("end") @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime end,
             @PathVariable("storeId") Long storeId
     );
 
     @GetMapping("/store/{storeId}/stats/sum")
     Optional<BigDecimal> sumStoreTotalByStatusAndCreatedAtBetween(
             @RequestParam("status") Order.OrderStatus status,
-            @RequestParam("start") LocalDateTime start,
-            @RequestParam("end") LocalDateTime end,
+            @RequestParam("start") @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime start,
+            @RequestParam("end") @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime end,
             @PathVariable("storeId") Long storeId
     );
 
@@ -163,15 +164,15 @@ public interface OrderServiceClient {
     @GetMapping("/count")
     Optional<Long> countOrder(
             @RequestParam(value = "status", required = false) Order.OrderStatus status,
-            @RequestParam(value = "start", required = false) LocalDateTime start,
-            @RequestParam(value = "end", required = false) LocalDateTime end
+            @RequestParam(value = "start", required = false) @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime start,
+            @RequestParam(value = "end", required = false) @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime end
     );
 
     @GetMapping("/sum")
     Optional<BigDecimal> sumOrder(
             @RequestParam(value = "status", required = false) Order.OrderStatus status,
-            @RequestParam(value = "start", required = false) LocalDateTime start,
-            @RequestParam(value = "end", required = false) LocalDateTime end
+            @RequestParam(value = "start", required = false) @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime start,
+            @RequestParam(value = "end", required = false) @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime end
     );
 
 }

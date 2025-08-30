@@ -14,6 +14,7 @@ import com.github.pagehelper.PageHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -174,14 +175,15 @@ public class OrderInternal {
     @GetMapping("/store/{storeId}/stats/count")
     public Optional<Long> countStoreByStatusAndCreatedAtBetween(
             @RequestParam("status") Order.OrderStatus status,
-            @RequestParam("start") LocalDateTime start,
-            @RequestParam("end") LocalDateTime end,
+            @RequestParam("start") @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime start,
+            @RequestParam("end") @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime end,
             @PathVariable("storeId") Long storeId
     ) {
         Long count = null;
         try {
             count = orderRepository.countStoreByStatusAndCreatedAtBetween(status, start, end, storeId);
         } catch (Exception ignored) {
+            log.warn("Error counting orders for storeId {}: {}", storeId, ignored.getMessage());
         }
         return Optional.ofNullable(count);
     }
@@ -189,14 +191,15 @@ public class OrderInternal {
     @GetMapping("/store/{storeId}/stats/sum")
     public Optional<BigDecimal> sumStoreTotalByStatusAndCreatedAtBetween(
             @RequestParam("status") Order.OrderStatus status,
-            @RequestParam("start") LocalDateTime start,
-            @RequestParam("end") LocalDateTime end,
+            @RequestParam("start") @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime start,
+            @RequestParam("end") @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime end,
             @PathVariable("storeId") Long storeId
     ) {
         BigDecimal sum = null;
         try {
             sum = orderRepository.sumStoreTotalByStatusAndCreatedAtBetween(status, start, end, storeId);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("Error summing orders for storeId {}: {}", storeId, e.getMessage());
         }
         return Optional.ofNullable(sum);
     }
@@ -209,7 +212,8 @@ public class OrderInternal {
         Long count = null;
         try {
             count = orderRepository.countStoreByStatus(status, storeId);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("Error counting orders for storeId {}: {}", storeId, e.getMessage());
         }
         return Optional.ofNullable(count);
     }
@@ -222,7 +226,8 @@ public class OrderInternal {
         BigDecimal sum = null;
         try {
             sum = orderRepository.sumStoreTotalByStatus(status, storeId);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("Error summing orders for storeId {}: {}", storeId, e.getMessage());
         }
         return Optional.ofNullable(sum);
     }
@@ -235,7 +240,8 @@ public class OrderInternal {
         List<StoreStatisticsVO.HotFoodVO> foods = null;
         try {
             foods = orderItemRepository.StoreFindTopSellingFoods(storeId, limit);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("Error fetching top foods for storeId {}: {}", storeId, e.getMessage());
         }
         return Optional.ofNullable(foods);
     }
@@ -247,7 +253,18 @@ public class OrderInternal {
         List<PlatformStatsVO.TopFoodItemVO> foods = null;
         try {
             foods = orderItemRepository.findTopSellingFoods(limit);
-        } catch (Exception ignored) {
+            for (PlatformStatsVO.TopFoodItemVO food : foods) {
+                // 调用 StoreServiceClient 获取店铺名称
+                storeService.getFoodById(food.getFoodId()).ifPresent(foodInfo -> {
+                    food.setFoodName(foodInfo.getName());
+                });
+                // 获取店铺名称
+                storeService.getStoreById(food.getStoreId()).ifPresent(storeInfo -> {
+                    food.setStoreName(storeInfo.getName());
+                });
+            }
+        } catch (Exception e) {
+            log.warn("Error fetching top foods for storeId: {}", e.getMessage());
         }
         return Optional.ofNullable(foods);
     }
@@ -259,7 +276,14 @@ public class OrderInternal {
         List<PlatformStatsVO.TopStoreItemVO> stores = null;
         try {
             stores = orderRepository.findTopStores(limit);
-        } catch (Exception ignored) {
+            for (PlatformStatsVO.TopStoreItemVO store : stores) {
+                // 调用 StoreServiceClient 获取店铺名称
+                storeService.getStoreById(store.getStoreId()).ifPresent(storeInfo -> {
+                    store.setStoreName(storeInfo.getName());
+                });
+            }
+        } catch (Exception e) {
+            log.warn("Error fetching top stores: {}", e.getMessage());
         }
         return Optional.ofNullable(stores);
     }
@@ -269,7 +293,8 @@ public class OrderInternal {
         List<RatingAggregateVO> ratings = null;
         try {
             ratings = reviewRepository.aggregateRatingsByStoreId(storeId);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("Error aggregating ratings for storeId {}: {}", storeId, e.getMessage());
         }
         return Optional.ofNullable(ratings);
     }
@@ -402,8 +427,8 @@ public class OrderInternal {
     @GetMapping("/count")
     public Optional<Long> countOrder(
             @RequestParam(value = "status", required = false) Order.OrderStatus status,
-            @RequestParam(value = "start", required = false) LocalDateTime start,
-            @RequestParam(value = "end", required = false) LocalDateTime end
+            @RequestParam(value = "start", required = false) @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime start,
+            @RequestParam(value = "end", required = false) @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime end
     ) {
         Long count = null;
         try {
@@ -422,8 +447,8 @@ public class OrderInternal {
     @GetMapping("/sum")
     public Optional<BigDecimal> sumOrder(
             @RequestParam(value = "status", required = false) Order.OrderStatus status,
-            @RequestParam(value = "start", required = false) LocalDateTime start,
-            @RequestParam(value = "end", required = false) LocalDateTime end
+            @RequestParam(value = "start", required = false) @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime start,
+            @RequestParam(value = "end", required = false) @DateTimeFormat(pattern = "yyyy/M/d HH:mm") LocalDateTime end
     ) {
         BigDecimal sum = null;
         try {

@@ -16,6 +16,16 @@ pipeline {
                 checkout scm
             }
         }
+
+        stage('Build All Modules') {
+            steps {
+                echo "Building all microservice JAR packages at once..."
+                // 在项目根目录执行 Maven 命令
+                // Maven 会自动处理模块间的依赖顺序
+                sh "mvn clean package -DskipTests"
+            }
+        }
+
         stage('Build & Push Images to Single ACR Repo') {
             steps {
                 script {
@@ -27,15 +37,6 @@ pipeline {
                             def latestTag = "${service}-latest"
                             
                             dir(service) {
-                                
-                                // ===================== 【新增的关键步骤】 ===================== //
-                                stage("Build JAR for ${service}") {
-                                    echo "Building JAR package for ${service}..."
-                                    // 运行 Maven 命令来编译和打包项目，跳过测试以加快速度
-                                    // 这会在当前目录 (e.g., ./admin-service/)下生成 target/*.jar 文件
-                                    sh "mvn clean package -DskipTests"
-                                }
-                                // ========================================================== //
                                 
                                 stage("Build and Push Image for ${service}") {
                                     echo "Building Docker image for ${service}..."

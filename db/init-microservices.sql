@@ -277,8 +277,8 @@ CREATE TABLE rider_stats (
 
 -- 插入骑手测试数据
 INSERT INTO rider (user_id, real_name, id_card, id_card_front, id_card_back, vehicle_type, vehicle_number, status, longitude, latitude) VALUES
-(4, '李四', '123456789012345678', '/id_cards/front1.jpg', '/id_cards/back1.jpg', 'ELECTRIC', '京A12345', 'ONLINE', 116.4074, 39.9042),
-(5, '王五', '123456789012345679', '/id_cards/front2.jpg', '/id_cards/back2.jpg', 'MOTORCYCLE', '京B67890', 'OFFLINE', 116.3112, 39.9991);
+(4, '李四', '123456789012345678', '/id_cards/front1.jpg', '/id_cards/back1.jpg', 'BIKE', '京A12345', 'ONLINE', 116.4074, 39.9042),
+(5, '王五', '123456789012345679', '/id_cards/front2.jpg', '/id_cards/back2.jpg', 'BIKE', '京B67890', 'OFFLINE', 116.3112, 39.9991);
 
 -- 插入骑手统计数据
 INSERT INTO rider_stats (rider_id, date, orders_count, completed_orders, canceled_orders, total_income, online_hours) VALUES

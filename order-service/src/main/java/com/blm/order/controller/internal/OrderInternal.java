@@ -109,7 +109,7 @@ public class OrderInternal {
     ) {
         List<Order> orders = null;
         try {
-            if (Order.OrderStatus.DELIVERED.equals(status)) {
+            if (Order.OrderStatus.COMPLETED.equals(status)) {
                 orders = orderRepository.findCompletedOrdersByRiderAndDate(riderId, date);
             } else if (Order.OrderStatus.CANCELLED.equals(status)) {
                 orders = orderRepository.findCanceledOrdersByRiderAndDate(riderId, date);
@@ -361,7 +361,8 @@ public class OrderInternal {
         OrderDetailVO orderDetail = null;
         try {
             orderDetail = orderService.getOrderDetailwithStore(orderId, storeId);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("Error fetching order detail for storeId {} and orderId {}: {}", storeId, orderId, e.getMessage());
         }
         return Optional.ofNullable(orderDetail);
     }
@@ -384,7 +385,8 @@ public class OrderInternal {
     ) {
         try {
             return orderRepository.updateStatusByStore(orderId, storeId, status, LocalDateTime.now());
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("Error updating order status for storeId {} and orderId {}: {}", storeId, orderId, e.getMessage());
             return 0;
         }
     }

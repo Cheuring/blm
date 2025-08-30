@@ -54,7 +54,7 @@ public interface StoreService {
 
     Store getStoreById(Long storeId);
 
-    void verifyStoreOwner(Long storeId, Long userId);
+    void verifyStoreOwner(Long storeId, Long merchantId);
 
     List<StoreCategoryVO> listStoreCategories();
 }

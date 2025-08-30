@@ -46,7 +46,7 @@ public class MerchantOrdersController {
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") int size
     ) {
-        storeService.verifyStoreOwner(userId, storeId);
+        storeService.verifyStoreOwner(storeId, userId);
         PageVO<OrderVO> orderVOPage = orderService.getOrdersByStoreId(storeId, status, page, size)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
         return Result.success(orderVOPage);
@@ -62,7 +62,7 @@ public class MerchantOrdersController {
             @Parameter(description = "店铺id", required = true) @PathVariable Long storeId,
             @Parameter(description = "订单id") @RequestParam Long id
     ) {
-        storeService.verifyStoreOwner(userId, storeId);
+        storeService.verifyStoreOwner(storeId, userId);
         OrderDetailVO orderDetailVO = orderService.getOrderDetailWithStore(storeId, id)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
         return Result.success(orderDetailVO);
@@ -78,7 +78,7 @@ public class MerchantOrdersController {
             @Parameter(description = "订单id", required = true) @PathVariable Long orderId,
             @RequestBody(description = "新的状态信息", required = true, content = @Content(schema = @Schema(implementation = OrderStatusUpdateDTO.class))) @org.springframework.web.bind.annotation.RequestBody OrderStatusUpdateDTO dto
     ) {
-        storeService.verifyStoreOwner(userId, storeId);
+        storeService.verifyStoreOwner(storeId, userId);
         orderService.updateOrderStatusByStore(orderId, storeId, dto.getOrderStatus());
         return Result.success(null);
     }

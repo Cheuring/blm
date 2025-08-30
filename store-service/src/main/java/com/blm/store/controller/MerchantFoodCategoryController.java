@@ -40,7 +40,7 @@ public class MerchantFoodCategoryController {
             @Parameter(description = "店铺ID", required = true) @PathVariable Long storeId) {
 
         // 校验店铺所有权
-        storeService.verifyStoreOwner(userId, storeId);
+        storeService.verifyStoreOwner(storeId, userId);
 
         List<FoodCategoryVO> categories = foodCategoryService.getCategoriesByStoreId(storeId);
         return Result.success(categories);
@@ -59,7 +59,7 @@ public class MerchantFoodCategoryController {
             @Valid @RequestBody FoodCategoryDTO dto) {
 
         // 校验店铺所有权
-        storeService.verifyStoreOwner(userId, storeId);
+        storeService.verifyStoreOwner(storeId, userId);
 
         FoodCategoryVO category = foodCategoryService.addCategory(storeId, dto);
         return Result.success(category);
@@ -79,7 +79,7 @@ public class MerchantFoodCategoryController {
             @Valid @RequestBody FoodCategoryDTO dto) {
 
         // 校验店铺所有权
-        storeService.verifyStoreOwner(userId, storeId);
+        storeService.verifyStoreOwner(storeId, userId);
 
         FoodCategoryVO category = foodCategoryService.updateCategory(storeId, id, dto);
         return Result.success(category);
@@ -94,7 +94,7 @@ public class MerchantFoodCategoryController {
             @Parameter(description = "分类ID", required = true) @PathVariable Long id) {
 
         // 校验店铺所有权
-        storeService.verifyStoreOwner(userId, storeId);
+        storeService.verifyStoreOwner(storeId, userId);
 
         foodCategoryService.deleteCategory(storeId, id);
         return Result.success(null);

@@ -126,7 +126,7 @@ public class StoreServiceImpl extends BaseService implements StoreService {
     }
 
     @Override
-    public void verifyStoreOwner(Long storeId, Long userId) {
+    public void verifyStoreOwner(Long userId, Long storeId) {
         Long storeOwnerId = getStoreOwnerId(storeId);
         if (!storeOwnerId.equals(userId)) {
             throw new CommonException(ExceptionConstant.STORE_UNAUTHORIZED);

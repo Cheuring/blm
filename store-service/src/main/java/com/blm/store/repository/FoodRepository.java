@@ -10,10 +10,10 @@ import java.util.Optional;
 public interface FoodRepository {
 
     @Select("SELECT * FROM food WHERE id = #{id}")
-    Optional<Food> findById(Long id); // todo: 调用的方法涉及商品下架问题
+    Optional<Food> findById(@Param("id") Long id); // todo: 调用的方法涉及商品下架问题
 
     @Select("SELECT * FROM food WHERE id = #{id} AND status = 'ON_SHELF'")
-    Optional<Food> findONById(Long id);
+    Optional<Food> findONById(@Param("id") Long id);
 
     @Select("SELECT * FROM food WHERE id = #{id} AND status = #{status}")
     Optional<Food> findByIdAndStatus(@Param("id") Long id, @Param("status") Food.FoodStatus status);

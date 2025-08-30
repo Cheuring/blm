@@ -1,6 +1,5 @@
 package com.blm.user.service.impl;
 
-import com.blm.common.dto.RegisterDTO;
 import com.blm.common.entity.User;
 import com.blm.common.entity.UserAddress;
 import com.blm.common.service.BaseService;
@@ -36,7 +35,7 @@ public class UserInternalServiceImpl extends BaseService implements UserInternal
     }
 
     @Override
-    public int updateRole(Long userId, String role) {
+    public int updateRole(Long userId, User.UserRole role) {
         return userRepository.updateRole(userId, role, LocalDateTime.now());
     }
 

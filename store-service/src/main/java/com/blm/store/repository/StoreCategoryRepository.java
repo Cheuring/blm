@@ -17,11 +17,11 @@ public interface StoreCategoryRepository {
     void insert(StoreCategory category);
 
     @Select("SELECT * FROM store_category WHERE id = #{id}")
-    StoreCategory findById(Long id);
+    StoreCategory findById(@Param("id") Long id);
 
     @Update("UPDATE store_category SET name = #{name}, icon = #{icon}, sort = #{sort}, created_at = #{createdAt} WHERE id = #{id}")
     void update(StoreCategory category);
 
     @Delete("DELETE FROM store_category WHERE id = #{id}")
-    void deleteById(Long id);
+    void deleteById(@Param("id") Long id);
 }

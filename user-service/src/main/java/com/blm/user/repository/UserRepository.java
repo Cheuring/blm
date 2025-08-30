@@ -14,10 +14,10 @@ import java.util.Optional;
 public interface UserRepository {
 
     @Select("SELECT * FROM user WHERE id = #{id}")
-    Optional<User> findById(Long id);
+    Optional<User> findById(@Param("id") Long id);
 
     @Select("SELECT * FROM user WHERE username = #{username}")
-    Optional<User> findByUsername(String username);
+    Optional<User> findByUsername(@Param("username") String username);
 
     @Update("UPDATE user SET password=#{password}, updated_at=#{updatedAt} WHERE id=#{id}")
     int updatePassword(@Param("id") Long id, @Param("password") String password, @Param("updatedAt") LocalDateTime updatedAt);
@@ -55,7 +55,7 @@ public interface UserRepository {
      * 更新用户角色
      */
     @Update("UPDATE user SET role = #{role}, updated_at = #{updatedAt} WHERE id = #{id}")
-    int updateRole(@Param("id") Long id, @Param("role") String role, @Param("updatedAt") LocalDateTime updatedAt);
+    int updateRole(@Param("id") Long id, @Param("role") User.UserRole role, @Param("updatedAt") LocalDateTime updatedAt);
 
     /**
      * 检查用户名是否存在
@@ -75,10 +75,10 @@ public interface UserRepository {
     int save(User user);
 
     @Select("SELECT id FROM user WHERE username = #{username}")
-    Long getUserIdByUsername(String username);
+    Long getUserIdByUsername(@Param("username") String username);
 
     @Delete("DELETE FROM user WHERE id = #{userId}")
-    void deleteById(Long userId);
+    void deleteById(@Param("userId") Long userId);
 
     void deleteBatchById(List<Long> userIds);
 }

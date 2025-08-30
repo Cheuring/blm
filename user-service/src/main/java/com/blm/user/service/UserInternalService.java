@@ -1,13 +1,11 @@
 package com.blm.user.service;
 
-import com.blm.common.dto.RegisterDTO;
 import com.blm.common.entity.User;
 import com.blm.common.entity.UserAddress;
 import com.blm.common.vo.UserVO;
 import com.blm.common.vo.PageVO;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface UserInternalService {
     // 贴合UserInternal控制器的接口定义
@@ -16,7 +14,7 @@ public interface UserInternalService {
 
     UserAddress findAddressById(Long id);
 
-    int updateRole(Long userId, String role);
+    int updateRole(Long userId, User.UserRole role);
 
     int updateStatus(Long userId, Integer status);
 

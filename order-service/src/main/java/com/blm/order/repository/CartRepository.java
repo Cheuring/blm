@@ -29,11 +29,11 @@ public interface CartRepository {
     int deleteByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
     @Delete("DELETE FROM cart WHERE user_id = #{userId}")
-    int deleteByUserId(Long userId);
+    int deleteByUserId(@Param("userId") Long userId);
 
     @Select("SELECT * FROM cart WHERE user_id = #{userId} AND store_id = #{storeId}")
-    List<Cart> findAllByUserIdAndStoreId(Long userId, Long storeId);
+    List<Cart> findAllByUserIdAndStoreId(@Param("userId") Long userId, @Param("storeId") Long storeId);
 
     @Delete("DELETE FROM cart WHERE user_id = #{userId} AND store_id = #{storeId}")
-    int deleteByUserIdAndStoreId(Long userId, Long storeId);
+    int deleteByUserIdAndStoreId(@Param("userId") Long userId, @Param("storeId") Long storeId);
 }

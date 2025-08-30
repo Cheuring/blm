@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface PromotionRepository {
 
     @Select("SELECT * FROM promotion WHERE store_id = #{storeId}")
-    List<Promotion> findByStoreId(Long storeId);
+    List<Promotion> findByStoreId(@Param("storeId") Long storeId);
 
     @Select("SELECT * FROM promotion WHERE id = #{id} AND store_id = #{storeId}")
     Optional<Promotion> findByIdAndStoreId(@Param("id") Long id, @Param("storeId") Long storeId);

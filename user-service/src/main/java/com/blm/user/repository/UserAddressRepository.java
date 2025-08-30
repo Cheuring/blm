@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface UserAddressRepository {
 
     @Select("SELECT * FROM user_address WHERE user_id = #{userId} ORDER BY is_default DESC, created_at DESC")
-    List<UserAddress> findAllByUserId(Long userId);
+    List<UserAddress> findAllByUserId(@Param("userId") Long userId);
 
     @Select("SELECT * FROM user_address WHERE id = #{id} AND user_id = #{userId}")
     Optional<UserAddress> findByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
@@ -29,11 +29,11 @@ public interface UserAddressRepository {
     int delete(@Param("id") Long id, @Param("userId") Long userId);
 
     @Update("UPDATE user_address SET is_default = 0 WHERE user_id = #{userId}")
-    int resetDefault(Long userId);
+    int resetDefault(@Param("userId") Long userId);
 
     @Update("UPDATE user_address SET is_default = 1 WHERE id = #{id} AND user_id = #{userId}")
     int setDefault(@Param("id") Long id, @Param("userId") Long userId);
 
     @Select("SELECT * FROM user_address WHERE id = #{id}")
-    Optional<UserAddress> findById(Long id);
+    Optional<UserAddress> findById(@Param("id") Long id);
 }

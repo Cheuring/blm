@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface StoreRepository {
 
     @Select("SELECT * FROM store WHERE id = #{id}")
-    Optional<Store> findById(Long id);
+    Optional<Store> findById(@Param("id") Long id);
 
     @Select("SELECT * FROM store WHERE id = #{id} AND status = #{status}")
     Optional<Store> findByIdAndStatus(@Param("id") Long id, @Param("status") Store.StoreStatus status);
@@ -21,7 +21,7 @@ public interface StoreRepository {
     List<Store> findFeatured();
 
     @Select("SELECT * FROM store WHERE merchant_id = #{merchantId}")
-    List<Store> findByMerchantId(Long merchantId);
+    List<Store> findByMerchantId(@Param("merchantId") Long merchantId);
 
     @Select("SELECT * FROM store")
     List<Store> findAllStores();
@@ -91,8 +91,8 @@ public interface StoreRepository {
     List<Store> findByFilters(StoreQueryDTO queryDTO);
 
     @Select("SELECT merchant_id FROM store WHERE id = #{storeId}")
-    Long findOwnerIdByStoreId(Long storeId);
+    Long findOwnerIdByStoreId(@Param("storeId") Long storeId);
 
     @Delete("delete from store where id=#{id}")
-    void deleteById(Long pendingStoreId);
+    void deleteById(@Param("id") Long pendingStoreId);
 }

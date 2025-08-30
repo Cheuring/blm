@@ -98,7 +98,7 @@ public class UserInternal {
      * 更新用户角色
      */
     @PutMapping("/{userId}/role")
-    public int updateRole(@PathVariable("userId") Long userId, @RequestParam("role") String role) {
+    public int updateRole(@PathVariable("userId") Long userId, @RequestParam("role") User.UserRole role) {
         try {
             return userInternalService.updateRole(userId, role);
         } catch (Exception e) {

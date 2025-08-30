@@ -11,16 +11,16 @@ import java.util.Optional;
 public interface HistoryRepository {
 
     @Select("SELECT * FROM history WHERE id = #{id} AND user_id = #{userId}")
-    Optional<History> findByIdAndUserId(Long id, Long userId);
+    Optional<History> findByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
     @Insert("INSERT INTO history (user_id, target_id, type) VALUES (#{userId}, #{targetId}, #{type})")
-    int insert(Long userId, Long targetId, String type);
+    int insert(@Param("userId") Long userId, @Param("targetId") Long targetId, @Param("type") String type);
 
     @Select("SELECT * FROM history WHERE user_id = #{userId} AND type = #{type} ORDER BY created_at DESC")
-    List<History> findByUserIdOrderedDesc(Long userId, String type);
+    List<History> findByUserIdOrderedDesc(@Param("userId") Long userId, @Param("type") String type);
 
     @Delete("DELETE FROM history WHERE id = #{historyId}")
-    int deleteById(Long historyId);
+    int deleteById(@Param("historyId") Long historyId);
 
 
     @Select("SELECT * FROM history " +
@@ -29,8 +29,8 @@ public interface HistoryRepository {
             "AND created_at >= #{earliest} " +
             "ORDER BY created_at DESC " +
             "LIMIT 1")
-    Optional<History> findRecordInTheDay(Long userId, String type, LocalDateTime earliest);
+    Optional<History> findRecordInTheDay(@Param("userId") Long userId, @Param("type") String type, @Param("earliest") LocalDateTime earliest);
 
     @Update("update history set created_at = #{now} where id = #{id}")
-    int updateVisitedTime(Long id, LocalDateTime now);
+    int updateVisitedTime(@Param("id") Long id, @Param("now") LocalDateTime now);
 }

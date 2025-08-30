@@ -31,7 +31,7 @@ public class HistoryServiceImpl implements HistoryService {
     private HistoryRepository historyRepository;
 
     @Autowired
-    private StoreServiceClient storeService;
+    private StoreServiceClient storeServiceClient;
 
     @Override
     public PageVO<StoreVO> listStoresHistory(Long userId, int page, int size) {
@@ -41,8 +41,8 @@ public class HistoryServiceImpl implements HistoryService {
         PageInfo<History> pageInfo = new PageInfo<>(historyList);
 
         List<StoreVO> storeVOList = historyList.stream().map(history -> {
-            Store store = storeService.getStoreById(history.getTargetId())
-                    .orElseThrow(() -> new CommonException(ExceptionConstant.STORE_NOT_FOUND));
+            Store store = storeServiceClient.getStoreById(history.getTargetId())
+                    .orElse(new Store());
             StoreVO vo = new StoreVO();
             BeanUtils.copyProperties(store, vo);
             vo.setHistoryId(history.getId());
@@ -61,8 +61,8 @@ public class HistoryServiceImpl implements HistoryService {
         PageInfo<History> pageInfo = new PageInfo<>(historyList);
 
         List<FoodVO> foodVOList = historyList.stream().map(history -> {
-            Food food = storeService.getFoodById(history.getTargetId())
-                    .orElseThrow(() -> new CommonException(ExceptionConstant.FOOD_NOT_FOUND));
+            Food food = storeServiceClient.getFoodById(history.getTargetId())
+                    .orElse(new Food());
             FoodVO vo = new FoodVO();
             BeanUtils.copyProperties(food, vo);
             // 替换id为历史记录id
@@ -88,7 +88,7 @@ public class HistoryServiceImpl implements HistoryService {
     @Transactional
     public void addStoreHistory(Long userId, Long storeId) {
         // Check if store exists
-        storeService.getStoreById(storeId)
+        storeServiceClient.getStoreById(storeId)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.STORE_NOT_FOUND));
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime earliest = now.toLocalDate().atStartOfDay();
@@ -106,7 +106,7 @@ public class HistoryServiceImpl implements HistoryService {
     @Transactional
     public void addFoodHistory(Long userId, Long foodId) {
         // Check if food exists
-        storeService.getFoodById(foodId)
+        storeServiceClient.getFoodById(foodId)
                 .orElseThrow(() -> new CommonException(ExceptionConstant.FOOD_NOT_FOUND));
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime earliest = now.toLocalDate().atStartOfDay();

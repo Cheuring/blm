@@ -19,6 +19,7 @@ spring:
           max-idle: 8
           min-idle: 0
 
+
 # Eureka配置
 eureka:
   client:

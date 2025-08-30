@@ -55,7 +55,7 @@ public interface UserRepository {
      * 更新用户角色
      */
     @Update("UPDATE user SET role = #{role}, updated_at = #{updatedAt} WHERE id = #{id}")
-    int updateRole(@Param("id") Long id, @Param("role") User.UserRole role, @Param("updatedAt") LocalDateTime updatedAt);
+    int updateRole(@Param("id") Long id, @Param("role") String role, @Param("updatedAt") LocalDateTime updatedAt);
 
     /**
      * 检查用户名是否存在

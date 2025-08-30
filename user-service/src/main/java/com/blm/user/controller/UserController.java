@@ -1,5 +1,6 @@
 package com.blm.user.controller;
 
+import com.blm.common.annotation.RequireRole;
 import com.blm.common.dto.PasswordUpdateDTO;
 import com.blm.common.dto.UserProfileUpdateDTO;
 import com.blm.common.result.Result;
@@ -10,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "用户信息管理")
 @RestController
 @RequestMapping("/api/users")
-@SecurityRequirement(name = "bearerAuth")
+//@RequireRole("USER")
 public class UserController {
 
     @Autowired

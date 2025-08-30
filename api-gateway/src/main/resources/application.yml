@@ -24,6 +24,9 @@ spring:
           uri: lb://user-service
           predicates:
             - Path=/api/users/**
+            - Path=/api/history/**
+            - Path=/api/favorites/**
+            - Path=/api/addresses/**
           filters:
             - StripPrefix=0
 
@@ -32,6 +35,9 @@ spring:
           uri: lb://store-service
           predicates:
             - Path=/api/stores/**
+            - Path=/api/merchant/**
+            - Path=/api/categories/**
+            - Path=/api/foods/**
           filters:
             - StripPrefix=0
 
@@ -40,6 +46,7 @@ spring:
           uri: lb://order-service
           predicates:
             - Path=/api/orders/**
+            - Path=/api/cart/**
           filters:
             - StripPrefix=0
 
@@ -47,7 +54,7 @@ spring:
         - id: rider-service
           uri: lb://rider-service
           predicates:
-            - Path=/api/riders/**
+            - Path=/api/rider/**
           filters:
             - StripPrefix=0
 
@@ -58,50 +65,6 @@ spring:
             - Path=/api/admin/**
           filters:
             - StripPrefix=0
-
-        # Swagger UI 路由
-        - id: swagger-ui
-          uri: lb://auth-center
-          predicates:
-            - Path=/swagger-ui.html,/swagger-ui/**,/v3/api-docs/**
-          filters:
-            - StripPrefix=0
-
-        # 各服务的 OpenAPI 文档路由
-        - id: auth-center-docs
-          uri: lb://auth-center
-          predicates:
-            - Path=/v3/api-docs/auth-center
-          filters:
-            - RewritePath=/v3/api-docs/auth-center, /v3/api-docs
-
-        - id: user-service-docs
-          uri: lb://user-service
-          predicates:
-            - Path=/v3/api-docs/user-service
-          filters:
-            - RewritePath=/v3/api-docs/user-service, /v3/api-docs
-
-        - id: order-service-docs
-          uri: lb://order-service
-          predicates:
-            - Path=/v3/api-docs/order-service
-          filters:
-            - RewritePath=/v3/api-docs/order-service, /v3/api-docs
-
-        - id: store-service-docs
-          uri: lb://store-service
-          predicates:
-            - Path=/v3/api-docs/store-service
-          filters:
-            - RewritePath=/v3/api-docs/store-service, /v3/api-docs
-
-        - id: rider-service-docs
-          uri: lb://rider-service
-          predicates:
-            - Path=/v3/api-docs/rider-service
-          filters:
-            - RewritePath=/v3/api-docs/rider-service, /v3/api-docs
 
       globalcors:
         cors-configurations:
@@ -147,7 +110,8 @@ jwt:
 # OpenAPI 配置
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    groups:
+      enabled: true
   swagger-ui:
     path: /swagger-ui.html
     urls:
@@ -156,7 +120,7 @@ springdoc:
       - name: 用户服务  
         url: /v3/api-docs/user-service
       - name: 订单服务
-        url: /v3/api-docs/order-service  
+        url: /v3/api-docs/order-service
       - name: 商店服务
         url: /v3/api-docs/store-service
       - name: 骑手服务
@@ -178,6 +142,12 @@ logging:
     org.springframework.cloud.openfeign: debug
     feign: debug
     root: warn
+    # Gateway 核心组件日志
+    org.springframework.cloud.gateway: TRACE
+    # 负载均衡器日志
+    org.springframework.cloud.loadbalancer: TRACE
+    # 底层网络客户端日志
+    reactor.netty.http.client: DEBUG
 
 feign:
   client:

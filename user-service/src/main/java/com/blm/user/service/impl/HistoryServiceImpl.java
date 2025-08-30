@@ -88,7 +88,8 @@ public class HistoryServiceImpl implements HistoryService {
     @Transactional
     public void addStoreHistory(Long userId, Long storeId) {
         // Check if store exists
-        storeService.getStoreById(storeId);
+        storeService.getStoreById(storeId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.STORE_NOT_FOUND));
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime earliest = now.toLocalDate().atStartOfDay();
         // Check if there is already a record for today

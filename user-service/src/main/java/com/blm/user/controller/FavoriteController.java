@@ -1,5 +1,6 @@
 package com.blm.user.controller;
 
+import com.blm.common.annotation.RequireRole;
 import com.blm.common.dto.FavoriteDTO;
 import com.blm.common.entity.Favorite;
 import com.blm.common.result.Result;
@@ -13,7 +14,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "收藏与历史", description = "用户管理收藏的店铺和商品")
 @RestController
 @RequestMapping("/api/favorites")
-@SecurityRequirement(name = "bearerAuth")
+//@RequireRole("USER")
 public class FavoriteController {
 
     @Autowired

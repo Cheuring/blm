@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +20,7 @@ import java.util.List;
 @Tag(name = "用户地址管理", description = "管理用户的收货地址")
 @RestController
 @RequestMapping("/api/addresses")
-@SecurityRequirement(name = "bearerAuth")
-@RequireRole("USER")
+//@RequireRole("USER")
 public class UserAddressController {
 
     @Autowired

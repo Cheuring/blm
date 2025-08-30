@@ -451,8 +451,8 @@ INSERT INTO cart (user_id, store_id, food_id, quantity) VALUES
 
 -- 订单测试数据
 INSERT INTO orders (order_no, user_id, store_id, rider_id, address_id, total_amount, delivery_fee, discount_amount, payment_amount, payment_type, status, expected_time) VALUES
-('ORD20240829001', 2, 1, 4, 1, 58.00, 5.00, 0.00, 63.00, 'ALIPAY', 'COMPLETED', '2024-08-29 13:30:00'),
-('ORD20240829002', 2, 2, 5, 1, 25.00, 3.00, 0.00, 28.00, 'WECHAT', 'DELIVERING', '2024-08-29 14:30:00');
+('ORD20240829001', 2, 1, 1, 1, 58.00, 5.00, 0.00, 63.00, 'ALIPAY', 'COMPLETED', '2024-08-29 13:30:00'),
+('ORD20240829002', 2, 2, 2, 1, 25.00, 3.00, 0.00, 28.00, 'WECHAT', 'DELIVERING', '2024-08-29 14:30:00');
 
 -- 订单明细测试数据
 INSERT INTO order_detail (order_id, food_id, food_name, food_image, price, quantity, amount) VALUES

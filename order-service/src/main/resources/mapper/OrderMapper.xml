@@ -54,12 +54,10 @@
 
     <!-- 查询销售额最高的店铺 -->
     <select id="findTopStores" resultMap="topFoodItemVOResultMap">
-        SELECT s.id                  as store_id,
-               s.name                as store_name,
+        SELECT o.store_id            as store_id,
                COUNT(o.id)           as order_count,
                SUM(o.payment_amount) as total_amount
         FROM orders o
-                 JOIN store s ON o.store_id = s.id
         WHERE o.status like 'COMPLETED'
         GROUP BY o.store_id
         ORDER BY total_amount DESC

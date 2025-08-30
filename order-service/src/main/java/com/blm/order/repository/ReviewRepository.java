@@ -2,7 +2,6 @@ package com.blm.order.repository;
 
 import com.blm.common.entity.Review;
 import com.blm.common.vo.RatingAggregateVO;
-import lombok.Data;
 import org.apache.ibatis.annotations.*;
 
 import java.time.LocalDateTime;
@@ -18,31 +17,31 @@ public interface ReviewRepository {
     /**
      * 添加/更新评价
      */
-    int save(Review review);
+    int save(@Param("review") Review review);
 
     /**
      * 根据ID查询评价
      */
     @Select("SELECT * FROM review WHERE id = #{id}")
-    Optional<Review> findById(Long id);
+    Optional<Review> findById(@Param("id") Long id);
 
     /**
      * 查询foodId对应的评价列表
      */
     @Select("SELECT r.* FROM review AS r join order_detail AS o on r.order_id = o.order_id WHERE food_id = #{foodId} ORDER BY r.created_at DESC")
-    List<Review> findByFoodId(Long foodId);
+    List<Review> findByFoodId(@Param("foodId") Long foodId);
 
     /**
      * 根据用户ID查询评价列表
      */
     @Select("SELECT * FROM review WHERE user_id = #{userId} ORDER BY created_at DESC")
-    List<Review> findByUserId(Long userId);
+    List<Review> findByUserId(@Param("userId") Long userId);
 
     /**
      * 根据店铺ID查询评价列表
      */
     @Select("SELECT * FROM review WHERE store_id = #{storeId} ORDER BY created_at DESC")
-    List<Review> findByStoreId(Long storeId);
+    List<Review> findByStoreId(@Param("storeId") Long storeId);
     
     /**
      * 根据店铺ID和评分查询评价列表（支持PageHelper）
@@ -53,7 +52,7 @@ public interface ReviewRepository {
      * 根据店铺ID统计评价数量
      */
     @Select("SELECT COUNT(*) FROM review WHERE store_id = #{storeId}")
-    Integer countByStoreId(Long storeId);
+    Integer countByStoreId(@Param("storeId") Long storeId);
     
     /**
      * 根据店铺ID和评分统计评价数量
@@ -64,20 +63,20 @@ public interface ReviewRepository {
      * 根据订单ID查询评价
      */
     @Select("SELECT * FROM review WHERE order_id = #{orderId}")
-    Optional<Review> findByOrderId(Long orderId);
+    Optional<Review> findByOrderId(@Param("orderId") Long orderId);
 
     /**
      * 检查订单是否已评价
      */
     @Select("SELECT COUNT(*) FROM review WHERE order_id = #{orderId}")
-    boolean existsByOrderId(Long orderId);
+    boolean existsByOrderId(@Param("orderId") Long orderId);
 
     /**
      * 更新评价
      */
     @Update("UPDATE review SET content = #{content}, store_rating = #{rating}, images = #{images} " +
             "WHERE id = #{id} AND user_id = #{userId}")
-    int update(Review review);
+    int update(@Param("review") Review review);
 
     /**
      * 删除评价
@@ -89,7 +88,7 @@ public interface ReviewRepository {
      * 计算店铺平均评分
      */
     @Select("SELECT AVG(store_rating) FROM review WHERE store_id = #{storeId}")
-    Double calculateAverageRating(Long storeId);
+    Double calculateAverageRating(@Param("storeId") Long storeId);
     
     // 添加管理员服务所需的方法
     
@@ -125,7 +124,7 @@ public interface ReviewRepository {
      * 管理员删除评价
      */
     @Delete("DELETE FROM review WHERE id = #{id}")
-    int deleteById(Long id);
+    int deleteById(@Param("id") Long id);
     
     /**
      * 更新评价状态（如隐藏或显示）
@@ -146,7 +145,7 @@ public interface ReviewRepository {
      * 删除评价（管理员使用）
      */
     @Delete("DELETE FROM review WHERE id = #{id}")
-    int delete(Review review);
+    int delete(@Param("review") Review review);
 
     /**
      * 根据店铺ID聚合评分统计
@@ -154,5 +153,5 @@ public interface ReviewRepository {
     @Select("SELECT store_rating AS rating, COUNT(*) AS count " +
             "FROM review WHERE store_id = #{storeId} " +
             "GROUP BY store_rating")
-    List<RatingAggregateVO> aggregateRatingsByStoreId(Long storeId);
+    List<RatingAggregateVO> aggregateRatingsByStoreId(@Param("storeId") Long storeId);
 }

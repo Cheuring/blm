@@ -81,6 +81,9 @@ public class PlatformStatsVO {
         
         @Schema(description = "销售数量")
         private Long salesCount;
+
+        @Schema(description = "店铺ID")
+        private Long storeId;
     }
     
     /**

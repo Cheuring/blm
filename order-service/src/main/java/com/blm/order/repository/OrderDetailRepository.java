@@ -14,8 +14,8 @@ public interface OrderDetailRepository {
     int insert(OrderDetail detail);
 
     @Select("SELECT * FROM order_detail WHERE order_id = #{orderId}")
-    List<OrderDetail> findByOrderId(Long orderId);
+    List<OrderDetail> findByOrderId(@Param("orderId") Long orderId);
 
     @Delete("DELETE FROM order_detail WHERE id = #{id}")
-    void deleteById(Long id);
+    void deleteById(@Param("id") Long id);
 }

@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         // 阿里云 ACR 相关配置
-        ACR_REGISTRY = "registry.cn-hangzhou.aliyuncs.com" // 请在ACR控制台确认您的实例地址
+        ACR_REGISTRY = "crpi-ak6ep24s2u70vrc7.cn-beijing.personal.cr.aliyuncs.com" // 请在ACR控制台确认您的实例地址
         ACR_NAMESPACE = "gabriel747" // 您创建的命名空间
         ACR_CREDENTIALS_ID = "aliyun-acr-credentials" // 您在 Jenkins 中为ACR创建的凭据 ID
 

@@ -17,7 +17,7 @@ public class Food {
     private Long id;
     private Long storeId;
     private Long categoryId;
-    private String name;
+    private String name = "empty";
     private BigDecimal price;
     private BigDecimal originalPrice;
     private String description;

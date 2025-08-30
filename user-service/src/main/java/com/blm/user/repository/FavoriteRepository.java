@@ -18,5 +18,5 @@ public interface FavoriteRepository {
     int deleteByUserIdAndTargetId(@Param("userId") Long userId, @Param("targetId") Long targetId, @Param("type") String type);
 
     @Select("SELECT * FROM favorite WHERE user_id = #{userId} AND type = #{type}")
-    List<Favorite> findAllByUserId(Long userId, String type);
+    List<Favorite> findAllByUserId(@Param("userId") Long userId, @Param("type") String type);
 }

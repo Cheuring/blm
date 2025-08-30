@@ -16,7 +16,7 @@ public class Store {
 
     private Long id;
     private Long merchantId;
-    private String name;
+    private String name = "empty";
     private String logo;
     private String description;
     private String phone;

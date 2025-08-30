@@ -40,7 +40,7 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         List<StoreVO> storeVOs = favStores.stream().map(fav -> {
             Store store = storeService.getStoreById(fav.getTargetId())
-                    .orElseThrow(() -> new CommonException(ExceptionConstant.STORE_NOT_FOUND));
+                    .orElse(new Store());
             StoreVO vo = new StoreVO();
             BeanUtils.copyProperties(store, vo);
             return vo;
@@ -52,6 +52,8 @@ public class FavoriteServiceImpl implements FavoriteService {
     @Override
     @Transactional
     public Integer addStoreFavorite(Long userId, Long storeId) {
+        storeService.getStoreById(storeId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.STORE_NOT_FOUND));
         int count = queryFavorite(userId, storeId, Favorite.TYPE_STORE);
         if (count > 0) {
             throw new CommonException(ExceptionConstant.STORE_ALREADY_FAV);
@@ -82,7 +84,7 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         List<FoodVO> foodVOs = favFoods.stream().map(fav -> {
             Food food = storeService.getFoodById(fav.getTargetId())
-                    .orElseThrow(() -> new CommonException(ExceptionConstant.FOOD_NOT_FOUND));
+                    .orElse(new Food());
             FoodVO vo = new FoodVO();
             BeanUtils.copyProperties(food, vo);
             return vo;
@@ -94,6 +96,8 @@ public class FavoriteServiceImpl implements FavoriteService {
     @Override
     @Transactional
     public Integer addFoodFavorite(Long userId, Long foodId) {
+        storeService.getFoodById(foodId)
+                .orElseThrow(() -> new CommonException(ExceptionConstant.FOOD_NOT_FOUND));
         int count = queryFavorite(userId, foodId, Favorite.TYPE_FOOD);
         if (count > 0) {
             throw new CommonException(ExceptionConstant.FOOD_ALREADY_FAV);

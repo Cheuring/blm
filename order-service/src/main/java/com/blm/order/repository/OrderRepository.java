@@ -23,10 +23,10 @@ public interface OrderRepository {
     int insert(Order order);
 
     @Select("SELECT * FROM orders WHERE user_id = #{userId} ORDER BY created_at DESC")
-    List<Order> findAllByUserId(Long userId);
+    List<Order> findAllByUserId(@Param("userId") Long userId);
 
     @Select("SELECT * FROM orders WHERE store_id = #{storeId} ORDER BY created_at DESC")
-    List<Order> findAllByStoreId(Long storeId);
+    List<Order> findAllByStoreId(@Param("storeId") Long storeId);
 
     /**
      * 根据店铺ID和状态查询订单列表(支持PageHelper)
@@ -41,7 +41,7 @@ public interface OrderRepository {
     Optional<Order> findByIdAndUserId(@Param("id") Long orderId, @Param("userId") Long userId);
     
     @Select("SELECT * FROM orders WHERE id = #{id}")
-    Optional<Order> findById(Long id);
+    Optional<Order> findById(@Param("id") Long id);
 
     @Update("UPDATE orders SET status = #{status}, updated_at = #{updatedAt} WHERE id = #{id} AND user_id = #{userId}")
     int updateStatus(@Param("id") Long id, @Param("userId") Long userId, @Param("status") Order.OrderStatus status, @Param("updatedAt") LocalDateTime updatedAt);
@@ -53,7 +53,7 @@ public interface OrderRepository {
     List<Order> findAvailableOrders();
 
     @Select("SELECT * FROM orders WHERE rider_id = #{riderId}")
-    List<Order> findByRiderId(Long riderId);
+    List<Order> findByRiderId(@Param("riderId") Long riderId);
 
     @Update("UPDATE orders SET rider_id = #{riderId}, status = #{status}, updated_at = #{updatedAt} WHERE id = #{orderId} AND rider_id IS NULL")
     int assignOrder(@Param("orderId") Long orderId, @Param("riderId") Long riderId, @Param("status") Order.OrderStatus status, @Param("updatedAt") LocalDateTime updatedAt);
@@ -193,11 +193,11 @@ public interface OrderRepository {
     BigDecimal sumStoreTotalByStatus(Order.OrderStatus status, Long storeId);
 
     @Update("UPDATE orders SET payment_type = #{paymentType}, updated_at = #{now} WHERE id = #{orderId} AND user_id = #{userId}")
-    int updatePaymentType(Long orderId, Long userId, PaymentDTO.PaymentType paymentType, LocalDateTime now);
+    int updatePaymentType(@Param("orderId") Long orderId, @Param("userId") Long userId, @Param("paymentType") PaymentDTO.PaymentType paymentType, @Param("now") LocalDateTime now);
 
     @Delete("DELETE FROM orders WHERE id=#{id}")
-    void deleteById(Long orderId);
+    void deleteById(@Param("id") Long orderId);
 
     @Select("SELECT * FROM orders WHERE id=#{id} AND user_id=#{userId} AND store_id=#{storeId}")
-    Optional<Order> findByIdAndUserIdAndStoreId(@Param("id")Long orderId, Long userId, Long storeId);
+    Optional<Order> findByIdAndUserIdAndStoreId(@Param("id")Long orderId, @Param("userId") Long userId, @Param("storeId") Long storeId);
 }

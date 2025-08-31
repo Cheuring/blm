@@ -1,0 +1,150 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # 认证中心路由
+        - id: auth-center
+          uri: lb://auth-center
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0
+
+        # 用户服务路由
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**,/api/history/**,/api/favorites/**,/api/addresses/**
+          filters:
+            - StripPrefix=0
+
+        # 商家服务路由（预留）
+        - id: store-service
+          uri: lb://store-service
+          predicates:
+            - Path=/api/stores/**,/api/merchant/**,/api/categories/**,/api/foods/**
+          filters:
+            - StripPrefix=0
+
+        # 订单服务路由（预留）
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**,/api/cart/**
+          filters:
+            - StripPrefix=0
+
+        # 骑手服务路由（预留）
+        - id: rider-service
+          uri: lb://rider-service
+          predicates:
+            - Path=/api/rider/**
+          filters:
+            - StripPrefix=0
+
+        # 管理后台路由（预留）
+        - id: admin-service
+          uri: lb://admin-service
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - StripPrefix=0
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+  # Redis配置
+#  data:
+#    redis:
+#      host: localhost
+#      port: 6379
+#      database: 0
+#      password:
+#      timeout: 3000ms
+#      lettuce:
+#        pool:
+#          max-active: 8
+#          max-idle: 8
+#          min-idle: 0
+  main:
+    web-application-type: reactive
+
+# Eureka配置
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+
+# OpenAPI 配置
+springdoc:
+  api-docs:
+    groups:
+      enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: 认证中心
+        url: /v3/api-docs/auth-center
+      - name: 用户服务  
+        url: /v3/api-docs/user-service
+      - name: 订单服务
+        url: /v3/api-docs/order-service
+      - name: 商店服务
+        url: /v3/api-docs/store-service
+      - name: 骑手服务
+        url: /v3/api-docs/rider-service
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
+# 日志配置
+logging:
+  level:
+    com.blm: debug
+    com.blm.common.feign: debug
+    # 启用 Feign 客户端的日志
+    org.springframework.cloud.openfeign: debug
+    feign: debug
+    root: warn
+    # Gateway 核心组件日志
+    org.springframework.cloud.gateway: TRACE
+    # 负载均衡器日志
+    org.springframework.cloud.loadbalancer: TRACE
+    # 底层网络客户端日志
+    reactor.netty.http.client: DEBUG
+
+feign:
+  client:
+    config:
+      default:
+        # 启用详细日志
+        loggerLevel: full
+        # 连接超时时间（毫秒）
+        connectTimeout: 10000
+        # 读取超时时间（毫秒）
+        readTimeout: 60000

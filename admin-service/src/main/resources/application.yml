@@ -1,13 +1,5 @@
 server:
   port: 8086
-spring:
-  application:
-    name: admin-service
-#  datasource:
-#    url: jdbc:mysql://localhost:3306/blm_admin?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
-#    username: root
-#    password: root
-#    driver-class-name: com.mysql.cj.jdbc.Driver
 
 eureka:
   client:

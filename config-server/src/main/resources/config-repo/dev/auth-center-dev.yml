@@ -1,13 +1,15 @@
-server:
-  port: 8085
-
 spring:
-  # 数据源配置
+  application:
+    name: auth-center
+  # 开发环境数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/rider_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/auth_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: 116688
+
+server:
+  port: 8082
 
 # Eureka配置
 eureka:
@@ -16,6 +18,8 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
+    registry-fetch-interval-seconds: 5
+    eureka-service-url-poll-interval-seconds: 60
   instance:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 10
@@ -23,36 +27,47 @@ eureka:
 
 # MyBatis配置
 mybatis:
+  mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.blm.common.entity
 
-# 日志配置
-logging:
-  level:
-    com.blm.rider: debug
-    com.blm.common.feign: debug
-    # 启用 Feign 客户端的日志
-    org.springframework.cloud.openfeign: debug
-    feign: debug
-    root: warn
+# JWT配置（开发环境）
+jwt:
+  secret: blm-takeout-secret-key-for-jwt-token-generation-and-validation-2025-dev
+  token-expiration: P1D
 
-feign:
-  client:
-    config:
-      default:
-        # 启用详细日志
-        loggerLevel: full
-        # 连接超时时间（毫秒）
-        connectTimeout: 10000
-        # 读取超时时间（毫秒）
-        readTimeout: 60000
-
-# SpringDoc配置
+# OpenAPI配置
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# 日志配置（开发环境详细日志）
+logging:
+  level:
+    com.blm: debug
+    com.blm.common.feign: debug
+    org.springframework.cloud.openfeign: debug
+    feign: debug
+    root: info
+
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: full
+        connectTimeout: 10000
+        readTimeout: 60000

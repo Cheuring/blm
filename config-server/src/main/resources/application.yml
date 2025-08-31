@@ -1,0 +1,44 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config-repo/,classpath:/config-repo/{profile}/
+        # 支持多环境配置
+        default-label: master
+        # 启用配置文件的环境感知
+        accept-empty: false
+        # 配置覆盖策略
+        override-none: false
+
+# Eureka客户端配置
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,refresh,env
+  endpoint:
+    health:
+      show-details: always
+
+# 日志配置
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+    org.springframework.web: INFO

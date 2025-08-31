@@ -1,10 +1,6 @@
 server:
   port: 8082
 
-spring:
-  profiles:
-    active: dev
-
 # Eureka配置
 eureka:
   client:

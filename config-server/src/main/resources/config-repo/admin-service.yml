@@ -1,10 +1,6 @@
 server:
   port: 8086
 
-spring:
-  profiles:
-    active: dev
-
 eureka:
   client:
     service-url:

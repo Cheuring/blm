@@ -2,8 +2,6 @@ server:
   port: 8080
 
 spring:
-  application:
-    name: api-gateway
   cloud:
     gateway:
       discovery:
@@ -102,10 +100,6 @@ eureka:
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
 
-# JWT配置
-jwt:
-  secret: blm-takeout-secret-key-for-jwt-token-generation-and-validation-2025
-  token-expiration: P1D
 
 # OpenAPI 配置
 springdoc:

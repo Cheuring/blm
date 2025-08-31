@@ -1,10 +1,8 @@
 package com.blm.gateway.filter;
 
 import com.blm.common.entity.User;
-import com.blm.common.exception.CommonException;
-import com.blm.common.feign.UserServiceClient;
-import com.blm.common.result.ExceptionConstant;
-import com.blm.common.util.JwtUtil;
+import com.blm.gateway.client.ReactiveAuthServiceClient;
+import com.blm.gateway.client.ReactiveUserServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -19,7 +17,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,16 +27,14 @@ import java.util.List;
 @Component
 public class AuthFilter implements GlobalFilter, Ordered {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    @Autowired @Lazy
+    private ReactiveAuthServiceClient authClient;
 
 //    @Autowired
 //    private RedisTemplate<String, String> redisTemplate;
 
     @Autowired @Lazy
-    private UserServiceClient userServiceClient;
-
-    private static final String USER_ROLES_CACHE_PREFIX = "gateway:user:roles:";
+    private ReactiveUserServiceClient userServiceClient;
 
     /**
      * 白名单路径，不需要认证
@@ -68,29 +63,26 @@ public class AuthFilter implements GlobalFilter, Ordered {
             return unauthorized(exchange.getResponse(), "缺少认证Token");
         }
 
-        // 验证Token
-        if (!jwtUtil.validateToken(token)) {
-            return unauthorized(exchange.getResponse(), "Token无效或已过期");
-        }
-
-        // 获取用户ID并添加到请求头
-        String userId = jwtUtil.getUserIdFromToken(token);
-        if (!StringUtils.hasText(userId)) {
-            return unauthorized(exchange.getResponse(), "无法解析用户信息");
-        }
-
-        // 这里需要调用用户服务获取用户角色信息
-        // 为了简化，暂时从Token中解析或使用默认值
-        // 在实际项目中，可以考虑在JWT中包含角色信息或调用用户服务
-        String userRoles = getUserRoles(userId); // 需要实现此方法
-
-        ServerHttpRequest mutatedRequest = request.mutate()
-                .header("X-User-Id", userId)
-                .header("X-User-Roles", userRoles)
-                .build();
-        exchange = exchange.mutate().request(mutatedRequest).build();
-
-        return chain.filter(exchange);
+        // 响应式验证Token并获取用户信息
+        return authClient.getUserId(token)
+                .switchIfEmpty(Mono.error(new RuntimeException("Token验证失败")))
+                .flatMap(userId -> {
+                    // 获取用户角色信息
+                    log.info("Authenticated userId: {}", userId);
+                    return getUserRoles(userId)
+                            .map(userRoles -> {
+                                ServerHttpRequest mutatedRequest = request.mutate()
+                                        .header("X-User-Id", String.valueOf(userId))
+                                        .header("X-User-Roles", userRoles)
+                                        .build();
+                                return exchange.mutate().request(mutatedRequest).build();
+                            });
+                })
+                .flatMap(chain::filter)
+                .onErrorResume(throwable -> {
+                    log.warn("Authentication failed: {}", throwable.getMessage());
+                    return unauthorized(exchange.getResponse(), "认证失败: " + throwable.getMessage());
+                });
     }
 
     /**
@@ -126,29 +118,28 @@ public class AuthFilter implements GlobalFilter, Ordered {
      * 获取用户角色信息
      * 优先从Redis缓存获取，缓存未命中则返回默认角色
      */
-    private String getUserRoles(String userId) {
+    private Mono<String> getUserRoles(Long userId) {
         try {
             // 从Redis缓存获取用户角色信息
 //            String cacheKey = USER_ROLES_CACHE_PREFIX + userId;
 //            String roles = redisTemplate.opsForValue().get(cacheKey);
 //
 //            if (StringUtils.hasText(roles)) {
-//                return roles;
+//                return Mono.just(roles);
 //            }
 
-            // 缓存未命中，返回默认角色
-            // 在实际项目中，这里应该调用用户服务获取角色信息
-            User user = userServiceClient.getUserById(Long.valueOf(userId))
-                    .orElseThrow(() -> new CommonException(ExceptionConstant.USER_NOT_FOUND));
-            String userRoles = user.getRole();
-
-            // 缓存用户角色信息，设置5分钟过期
-//            redisTemplate.opsForValue().set(cacheKey, userRoles, Duration.ofMinutes(5));
-
-            return userRoles;
+            // 缓存未命中，调用用户服务获取角色信息
+            return userServiceClient.getUserById(userId)
+                    .map(User::getRole)
+                    .switchIfEmpty(Mono.just("USER"))  // 默认角色
+                    .doOnNext(userRoles -> {
+                        // 缓存用户角色信息，设置5分钟过期
+//                        redisTemplate.opsForValue().set(cacheKey, userRoles, Duration.ofMinutes(5));
+                    })
+                    .onErrorReturn("USER"); // 出错时返回默认角色
         } catch (Exception e) {
             log.warn("Failed to get user roles for userId: {}, error: {}", userId, e.getMessage());
-            return "USER"; // 默认角色
+            return Mono.just("USER"); // 默认角色
         }
     }
 

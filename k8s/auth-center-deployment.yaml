@@ -14,6 +14,8 @@ spec:
       labels:
         app: auth-center
     spec:
+      nodeSelector:
+        workload-type: backend-apps
       containers:
         - name: auth-center
           image: auth-center:latest

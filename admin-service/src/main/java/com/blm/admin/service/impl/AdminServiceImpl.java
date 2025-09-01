@@ -403,7 +403,8 @@ public class AdminServiceImpl extends BaseService implements AdminService {
                     String foodName = item.getFoodName();
                     String storeName = item.getStoreName();
                     Long salesCount = item.getSalesCount();
-                    return new PlatformStatsVO.TopFoodItemVO(foodId, foodName, storeName, salesCount);
+                    Long storeId = item.getStoreId();
+                    return new PlatformStatsVO.TopFoodItemVO(foodId, foodName, storeName, salesCount, storeId);
                 })
                 .collect(Collectors.toList());
 

@@ -123,7 +123,7 @@ public class UserInternal {
     /**
      * 根据条件获取用户列表
      */
-    @GetMapping("")
+    @GetMapping("/")
     public Optional<PageVO<UserVO>> getByConditions(
             @RequestParam(value = "role", required = false) User.UserRole role,
             @RequestParam(value = "status", required = false) Integer status,

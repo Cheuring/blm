@@ -1,5 +1,5 @@
 # 基础镜像
-FROM openjdk:21-jdk-slim
+FROM openjdk:17-jdk-slim
 
 # 维护者信息
 LABEL maintainer="blm-team"

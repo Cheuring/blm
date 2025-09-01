@@ -15,7 +15,7 @@ pipeline {
         // --- SSH 和 Kubernetes 部署配置 (请务必修改) ---
         K8S_SSH_CREDENTIAL_ID = "k8s-server-ssh" // Jenkins 中配置的 SSH 凭证 ID
         K8S_USER_HOST = "root@124.243.180.56" // K8s 服务器的 [用户]@[IP或域名]
-        K8S_REMOTE_DIR = "root/blm-k8s"   // K8s 服务器上存放 YAML 的目录
+        K8S_REMOTE_DIR = "/root/blm-k8s"   // K8s 服务器上存放 YAML 的目录
         K8S_NAMESPACE = "default" // 您的应用部署在哪个命名空间
     }
 

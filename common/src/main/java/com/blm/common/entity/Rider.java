@@ -17,6 +17,7 @@ public class Rider {
         BIKE,
         MOTORBIKE,
         ELECTRIC,
+        MOTORCYCLE,
     }
 
     private Long id;

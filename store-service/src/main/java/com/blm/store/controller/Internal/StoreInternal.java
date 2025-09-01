@@ -119,6 +119,9 @@ public class StoreInternal extends BaseService {
             }
         }
 
+        // 使用PageHelper进行分页
+        PageHelper.startPage(page, size);
+
         // 根据条件查询店铺列表
         List<Store> stores = storeRepository.findByStatusAndKeyword(status, keyword);
 

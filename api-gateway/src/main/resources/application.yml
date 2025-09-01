@@ -64,6 +64,13 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: file-service
+          uri: lb://file-service
+          predicates:
+            - Path=/api/files/**
+          filters:
+            - StripPrefix=0
+
       globalcors:
         cors-configurations:
           '[/**]':

@@ -46,12 +46,24 @@ start "Rider Service" cmd /c "mvn spring-boot:run"
 cd ..
 timeout /t 5
 
+echo 8. 启动文件服务...
+cd file-service
+start "File Service" cmd /c "mvn spring-boot:run"
+cd ..
+timeout /t 5
+
 echo.
 echo 所有微服务启动完成！
 echo =================================================
 echo 访问地址：
 echo - Eureka控制台: http://localhost:8761
 echo - API网关: http://localhost:8080
+echo - 文件服务: http://localhost:8107
 echo - Swagger UI: http://localhost:8080/swagger-ui.html
+echo - 文件服务API: http://localhost:8107/swagger-ui.html
+echo =================================================
+echo.
+echo 注意：文件服务需要MinIO存储服务，请确保MinIO已启动
+echo MinIO控制台: http://localhost:9001
 echo =================================================
 pause

@@ -1,0 +1,43 @@
+server:
+  port: 8107
+
+spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# MinIO配置
+minio:
+  endpoint: http://124.243.180.56:9000
+  access-key: YFs6eJlY6dsBN2jXnU4w
+  secret-key: 7te65sNHcWoROShHK2lrcKLO9kVzT0yMC9n8iSUu
+  bucket-name: blm
+  max-file-size: 10MB
+  prefix: https://www.buaa.fun/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.blm: DEBUG
+    org.springframework.web: DEBUG

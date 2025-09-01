@@ -14,6 +14,8 @@ spec:
       labels:
         app: mysql
     spec:
+      nodeSelector:
+        workload-type: stateful-services
       containers:
         - name: mysql
           image: mysql:8.0

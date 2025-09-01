@@ -14,6 +14,8 @@ spec:
       labels:
         app: store-service
     spec:
+      nodeSelector:
+        workload-type: backend-apps
       containers:
         - name: store-service
           image: store-service:latest

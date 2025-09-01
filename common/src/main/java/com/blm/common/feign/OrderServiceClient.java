@@ -52,14 +52,14 @@ public interface OrderServiceClient {
     Optional<List<Review>> getReviewsByFoodId(@PathVariable("foodId") Long foodId);
 
     @GetMapping("/reviews/store/{storeId}")
-    Optional<List<Review>> getReviewsByStoreId(
+    Optional<PageVO<ReviewVO>> getReviewsByStoreId(
             @PathVariable("storeId") Long storeId,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size
     );
 
     @GetMapping("/reviews/store/{storeId}/rate")
-    Optional<List<Review>> getReviewsByStoreIdAndRating(
+    Optional<PageVO<ReviewVO>> getReviewsByStoreIdAndRating(
             @PathVariable("storeId") Long storeId,
             @RequestParam("rating") int rating,
             @RequestParam("page") int page,

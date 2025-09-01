@@ -1,23 +1,13 @@
+server:
+  port: 8085
+
 spring:
-  profiles:
-    active: dev
+  # 数据源配置
   datasource:
-    url: jdbc:mysql://localhost:3306/store_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/rider_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: 116688
-    driver-class-name: com.mysql.cj.jdbc.Driver
-#  redis:
-#    host: 127.0.0.1
-#    port: 6379
-#    timeout: 3000ms
-#    lettuce:
-#      pool:
-#        max-active: 8
-#        max-idle: 8
-#        min-idle: 0
-
-server:
-  port: 8083
 
 # Eureka配置
 eureka:
@@ -31,13 +21,15 @@ eureka:
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
 
+# MyBatis配置
 mybatis:
-  mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
-    # 打印 SQL 语句到控制台
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.blm.common.entity
 
+# 日志配置
 logging:
   level:
     com.blm.rider: debug
@@ -46,7 +38,7 @@ logging:
     org.springframework.cloud.openfeign: debug
     feign: debug
     root: warn
-    
+
 feign:
   client:
     config:
@@ -58,15 +50,7 @@ feign:
         # 读取超时时间（毫秒）
         readTimeout: 60000
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-  endpoint:
-    health:
-      show-details: always
-
+# SpringDoc配置
 springdoc:
   api-docs:
     path: /v3/api-docs

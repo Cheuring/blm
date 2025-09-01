@@ -1,7 +1,15 @@
+spring:
+  application:
+    name: auth-center
+  # 开发环境数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/auth_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: 116688
+
 server:
   port: 8082
-
-
 
 # Eureka配置
 eureka:
@@ -17,9 +25,17 @@ eureka:
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
 
-# JWT配置
+# MyBatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  type-aliases-package: com.blm.common.entity
+
+# JWT配置（开发环境）
 jwt:
-  secret: blm-takeout-secret-key-for-jwt-token-generation-and-validation-2025
+  secret: blm-takeout-secret-key-for-jwt-token-generation-and-validation-2025-dev
   token-expiration: P1D
 
 # OpenAPI配置
@@ -34,25 +50,24 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
 
-# 日志配置
+# 日志配置（开发环境详细日志）
 logging:
   level:
     com.blm: debug
     com.blm.common.feign: debug
-    # 启用 Feign 客户端的日志
     org.springframework.cloud.openfeign: debug
     feign: debug
-    root: warn
+    root: info
 
 feign:
   client:
     config:
       default:
-        # 启用详细日志
         loggerLevel: full
-        # 连接超时时间（毫秒）
         connectTimeout: 10000
-        # 读取超时时间（毫秒）
         readTimeout: 60000

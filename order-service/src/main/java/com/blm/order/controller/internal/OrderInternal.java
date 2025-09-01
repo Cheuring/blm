@@ -2,8 +2,11 @@ package com.blm.order.controller.internal;
 
 import com.blm.common.entity.Order;
 import com.blm.common.entity.Review;
+import com.blm.common.entity.User;
+import com.blm.common.exception.CommonException;
 import com.blm.common.feign.StoreServiceClient;
 import com.blm.common.feign.UserServiceClient;
+import com.blm.common.result.ExceptionConstant;
 import com.blm.common.vo.*;
 import com.blm.order.repository.OrderItemRepository;
 import com.blm.order.repository.OrderRepository;
@@ -106,7 +109,7 @@ public class OrderInternal {
     ) {
         List<Order> orders = null;
         try {
-            if (Order.OrderStatus.DELIVERED.equals(status)) {
+            if (Order.OrderStatus.COMPLETED.equals(status)) {
                 orders = orderRepository.findCompletedOrdersByRiderAndDate(riderId, date);
             } else if (Order.OrderStatus.CANCELLED.equals(status)) {
                 orders = orderRepository.findCanceledOrdersByRiderAndDate(riderId, date);
@@ -136,40 +139,76 @@ public class OrderInternal {
     }
 
     @GetMapping("/reviews/store/{storeId}")
-    public Optional<List<Review>> getReviewsByStoreId(
+    public Optional<PageVO<ReviewVO>> getReviewsByStoreId(
             @PathVariable("storeId") Long storeId,
-            @RequestParam(value = "page", required = false) Integer page,
-            @RequestParam(value = "size", required = false) Integer size
+            @RequestParam("page") int page,
+            @RequestParam("size") int size
     ) {
-        List<Review> reviews = null;
+        PageVO<ReviewVO> pageReviewVOs = null;
         try {
-            if (page != null && size != null) {
-                // 使用 PageHelper 进行分页
-                PageHelper.startPage(page, size);
-                reviews = reviewRepository.findByStoreId(storeId);
-            } else {
-                // 不分页，获取所有评论
-                reviews = reviewRepository.findByStoreId(storeId);
-            }
-        } catch (Exception ignored) {
+            // 使用 PageHelper 进行分页
+            PageHelper.startPage(page, size);
+            List<Review> reviews = reviewRepository.findByStoreId(storeId);
+
+            Page<Review> pageInfo = (Page<Review>) reviews;
+            // 转换为VO列表，并填充用户信息
+            List<ReviewVO> reviewVOs = reviews.stream().map(review -> {
+                ReviewVO vo = new ReviewVO();
+                BeanUtils.copyProperties(review, vo);
+
+                // 填充用户信息
+                try {
+                    User user = userService.getUserById(review.getUserId())
+                            .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
+                    vo.setUserName(user.getUsername());
+                    vo.setUserAvatar(user.getAvatar());
+                } catch (Exception ignore) {
+                }
+
+                return vo;
+            }).collect(Collectors.toList());
+
+            pageReviewVOs = new PageVO<>(page, size, pageInfo.getTotal(), pageInfo.getPages(), reviewVOs);
+        } catch (Exception e) {
+            log.warn("Error fetching reviews for storeId {}: {}", storeId, e.getMessage());
         }
-        return Optional.ofNullable(reviews);
+        return Optional.ofNullable(pageReviewVOs);
     }
 
     @GetMapping("/reviews/store/{storeId}/rate")
-    public Optional<List<Review>> getReviewsByStoreIdAndRating(
+    public Optional<PageVO<ReviewVO>> getReviewsByStoreIdAndRating(
             @PathVariable("storeId") Long storeId,
             @RequestParam("rating") int rating,
             @RequestParam("page") int page,
             @RequestParam("size") int size
     ) {
-        List<Review> reviews = null;
+        PageVO<ReviewVO> pageReviewVOs = null;
         try {
             PageHelper.startPage(page, size);
-            reviews = reviewRepository.findByStoreIdAndRating(storeId, rating);
+            List<Review> reviews = reviewRepository.findByStoreIdAndRating(storeId, rating);
+
+            Page<Review> pageInfo = (Page<Review>) reviews;
+            // 转换为VO列表，并填充用户信息
+            List<ReviewVO> reviewVOs = reviews.stream().map(review -> {
+                ReviewVO vo = new ReviewVO();
+                BeanUtils.copyProperties(review, vo);
+
+                // 填充用户信息
+                try {
+                    User user = userService.getUserById(review.getUserId())
+                            .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
+                    vo.setUserName(user.getUsername());
+                    vo.setUserAvatar(user.getAvatar());
+                } catch (Exception ignore) {
+                }
+
+                return vo;
+            }).collect(Collectors.toList());
+
+            pageReviewVOs = new PageVO<>(page, size, pageInfo.getTotal(), pageInfo.getPages(), reviewVOs);
         } catch (Exception ignored) {
         }
-        return Optional.ofNullable(reviews);
+        return Optional.ofNullable(pageReviewVOs);
     }
 
     @GetMapping("/store/{storeId}/stats/count")
@@ -322,7 +361,8 @@ public class OrderInternal {
         OrderDetailVO orderDetail = null;
         try {
             orderDetail = orderService.getOrderDetailwithStore(orderId, storeId);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("Error fetching order detail for storeId {} and orderId {}: {}", storeId, orderId, e.getMessage());
         }
         return Optional.ofNullable(orderDetail);
     }
@@ -345,7 +385,8 @@ public class OrderInternal {
     ) {
         try {
             return orderRepository.updateStatusByStore(orderId, storeId, status, LocalDateTime.now());
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("Error updating order status for storeId {} and orderId {}: {}", storeId, orderId, e.getMessage());
             return 0;
         }
     }

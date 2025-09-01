@@ -38,6 +38,7 @@
     <modules>
         <module>common</module>
         <module>eureka-server</module>
+        <module>config-server</module>
         <module>api-gateway</module>
         <module>auth-center</module>
         <module>user-service</module>

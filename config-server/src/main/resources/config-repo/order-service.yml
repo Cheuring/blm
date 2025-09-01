@@ -1,8 +1,6 @@
 spring:
-  profiles:
-    active: dev
   datasource:
-    url: jdbc:mysql://localhost:3306/store_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/order_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
     username: root
     password: 116688
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -17,7 +15,7 @@ spring:
 #        min-idle: 0
 
 server:
-  port: 8083
+  port: 8084
 
 # Eureka配置
 eureka:
@@ -35,18 +33,17 @@ mybatis:
   mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
-    # 打印 SQL 语句到控制台
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 logging:
   level:
-    com.blm.rider: debug
+    com.blm.order: debug
     com.blm.common.feign: debug
     # 启用 Feign 客户端的日志
     org.springframework.cloud.openfeign: debug
     feign: debug
     root: warn
-    
+
 feign:
   client:
     config:
@@ -57,7 +54,7 @@ feign:
         connectTimeout: 10000
         # 读取超时时间（毫秒）
         readTimeout: 60000
-
+    
 management:
   endpoints:
     web:

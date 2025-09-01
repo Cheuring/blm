@@ -46,7 +46,7 @@ public class MerchantReviewServiceImpl implements MerchantReviewService {
         // 验证店铺所有权
         storeService.verifyStoreOwner(storeId, merchantId);
         
-        List<Review> reviews;
+        PageVO<ReviewVO> reviews;
         if(storeRating == null){
             reviews = orderService.getReviewsByStoreId(storeId, page, size)
                     .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
@@ -57,25 +57,7 @@ public class MerchantReviewServiceImpl implements MerchantReviewService {
             throw new CommonException(ExceptionConstant.REQ_PARAM_ERROR);
         }
 
-        Page<Review> pageInfo = (Page<Review>) reviews;
-        // 转换为VO列表，并填充用户信息
-        List<ReviewVO> reviewVOs = reviews.stream().map(review -> {
-            ReviewVO vo = new ReviewVO();
-            BeanUtils.copyProperties(review, vo);
-
-            // 填充用户信息
-            try {
-                User user = userService.getUserById(review.getUserId())
-                        .orElseThrow(() -> new CommonException(ExceptionConstant.SYS_DATABASE_ERROR));
-                vo.setUserName(user.getUsername());
-                vo.setUserAvatar(user.getAvatar());
-            } catch (Exception ignore) {}
-
-            return vo;
-        }).collect(Collectors.toList());
-
-        // 构造分页结果
-        return new PageVO<>(page, size, pageInfo.getTotal(), pageInfo.getPages(), reviewVOs);
+        return reviews;
     }
     
     @Override

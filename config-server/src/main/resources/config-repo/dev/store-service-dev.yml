@@ -1,27 +1,29 @@
-server:
-  port: 8081
-
 spring:
-  # 数据库配置
+  application:
+    name: store-service
+  # 开发环境数据库配置
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/user_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/store_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: 116688
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+  # Redis配置（开发环境）
+  # data:
+  #   redis:
+  #     host: localhost
+  #     port: 6379
+  #     database: 3
+  #     password:
+  #     timeout: 3000ms
+  #     lettuce:
+  #       pool:
+  #         max-active: 8
+  #         max-idle: 8
+  #         min-idle: 0
 
-  # Redis配置
-#  data:
-#    redis:
-#      host: localhost
-#      port: 6379
-#      database: 2
-#      password:
-#      timeout: 3000ms
-#      lettuce:
-#        pool:
-#          max-active: 8
-#          max-idle: 8
-#          min-idle: 0
+server:
+  port: 8083
 
 # Eureka配置
 eureka:
@@ -43,14 +45,6 @@ mybatis:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   type-aliases-package: com.blm.common.entity
 
-# 分页插件配置
-pagehelper:
-  helper-dialect: mysql
-  reasonable: true
-  support-methods-arguments: true
-  params: count=countSql
-
-
 # OpenAPI配置
 springdoc:
   api-docs:
@@ -63,28 +57,24 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
 
-# 日志配置
+# 日志配置（开发环境详细日志）
 logging:
   level:
     com.blm: debug
     com.blm.common.feign: debug
-    # 启用 Feign 客户端的日志
     org.springframework.cloud.openfeign: debug
     feign: debug
-    root: warn
+    root: info
 
 feign:
   client:
     config:
       default:
-        # 启用详细日志
         loggerLevel: full
-        # 连接超时时间（毫秒）
         connectTimeout: 10000
-        # 读取超时时间（毫秒）
         readTimeout: 60000
-
-test:
-  dev: local

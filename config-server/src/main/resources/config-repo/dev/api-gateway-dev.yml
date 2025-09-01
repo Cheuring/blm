@@ -1,7 +1,6 @@
-server:
-  port: 8080
-
 spring:
+  application:
+    name: api-gateway
   cloud:
     gateway:
       discovery:
@@ -21,34 +20,27 @@ spring:
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/api/users/**
-            - Path=/api/history/**
-            - Path=/api/favorites/**
-            - Path=/api/addresses/**
+            - Path=/api/users/**,/api/history/**,/api/favorites/**,/api/addresses/**
           filters:
             - StripPrefix=0
 
-        # 商家服务路由（预留）
+        # 商家服务路由
         - id: store-service
           uri: lb://store-service
           predicates:
-            - Path=/api/stores/**
-            - Path=/api/merchant/**
-            - Path=/api/categories/**
-            - Path=/api/foods/**
+            - Path=/api/stores/**,/api/merchant/**,/api/categories/**,/api/foods/**
           filters:
             - StripPrefix=0
 
-        # 订单服务路由（预留）
+        # 订单服务路由
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=/api/orders/**
-            - Path=/api/cart/**
+            - Path=/api/orders/**,/api/cart/**
           filters:
             - StripPrefix=0
 
-        # 骑手服务路由（预留）
+        # 骑手服务路由
         - id: rider-service
           uri: lb://rider-service
           predicates:
@@ -56,7 +48,7 @@ spring:
           filters:
             - StripPrefix=0
 
-        # 管理后台路由（预留）
+        # 管理后台路由
         - id: admin-service
           uri: lb://admin-service
           predicates:
@@ -72,23 +64,26 @@ spring:
             allowedHeaders: "*"
             allowCredentials: true
 
-  # Redis配置
-#  data:
-#    redis:
-#      host: localhost
-#      port: 6379
-#      database: 0
-#      password:
-#      timeout: 3000ms
-#      lettuce:
-#        pool:
-#          max-active: 8
-#          max-idle: 8
-#          min-idle: 0
+  # Redis配置（开发环境）
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      password:
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
   main:
     web-application-type: reactive
 
-# Eureka配置
+server:
+  port: 8080
+
+# Eureka配置（开发环境）
 eureka:
   client:
     service-url:
@@ -99,7 +94,6 @@ eureka:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
-
 
 # OpenAPI 配置
 springdoc:
@@ -125,31 +119,27 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
 
-# 日志配置
+# 日志配置（开发环境详细日志）
 logging:
   level:
     com.blm: debug
     com.blm.common.feign: debug
-    # 启用 Feign 客户端的日志
     org.springframework.cloud.openfeign: debug
     feign: debug
-    root: warn
-    # Gateway 核心组件日志
-    org.springframework.cloud.gateway: TRACE
-    # 负载均衡器日志
-    org.springframework.cloud.loadbalancer: TRACE
-    # 底层网络客户端日志
+    root: info
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG
     reactor.netty.http.client: DEBUG
 
 feign:
   client:
     config:
       default:
-        # 启用详细日志
         loggerLevel: full
-        # 连接超时时间（毫秒）
         connectTimeout: 10000
-        # 读取超时时间（毫秒）
         readTimeout: 60000

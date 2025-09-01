@@ -1,5 +1,5 @@
 # 基于官方 OpenJDK 镜像
-FROM openjdk:17-jdk-alpine
+FROM openjdk:21-jdk-alpine
 
 # 创建目录
 WORKDIR /app

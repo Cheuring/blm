@@ -18,7 +18,7 @@ spec:
         - name: acr-secret
       containers:
         - name: order-service
-          image: order-service:latest
+          image: crpi-ak6ep24s2u70vrc7.cn-beijing.personal.cr.aliyuncs.com/gabriel747/blm-microservices:order-service-placeholder
           ports:
             - containerPort: 8080
           env:

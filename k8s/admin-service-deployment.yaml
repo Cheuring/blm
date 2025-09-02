@@ -18,7 +18,7 @@ spec:
         - name: acr-secret
       containers:
         - name: admin-service
-          image: admin-service:latest
+          image: crpi-ak6ep24s2u70vrc7.cn-beijing.personal.cr.aliyuncs.com/gabriel747/blm-microservices:admin-service-placeholder
           ports:
             - containerPort: 8080
           env:

@@ -18,7 +18,7 @@ spec:
         - name: acr-secret
       containers:
         - name: auth-center
-          image: auth-center:latest
+          image: crpi-ak6ep24s2u70vrc7.cn-beijing.personal.cr.aliyuncs.com/gabriel747/blm-microservices:auth-center-placeholder
           ports:
             - containerPort: 8080
           env:

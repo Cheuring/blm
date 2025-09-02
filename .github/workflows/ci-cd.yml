@@ -109,7 +109,7 @@ jobs:
 
   deploy-to-k8s:
     needs: build-and-push
-    runs-on: build-and-push
+    runs-on: self-hosted
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/micro_k8s'
     
     steps:

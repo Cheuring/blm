@@ -14,6 +14,8 @@ spec:
       labels:
         app: api-gateway
     spec:
+      imagePullSecrets:
+        - name: acr-secret
       nodeSelector:
         workload-type: backend-apps
       containers:

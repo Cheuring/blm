@@ -16,11 +16,9 @@ spec:
     spec:
       imagePullSecrets:
         - name: acr-secret
-      nodeSelector:
-        workload-type: backend-apps
       containers:
         - name: api-gateway
-          image: api-gateway:latest
+          image: crpi-ak6ep24s2u70vrc7.cn-beijing.personal.cr.aliyuncs.com/gabriel747/blm-microservices:api-gateway-placeholder
           ports:
             - containerPort: 8080
           env:
@@ -28,8 +26,8 @@ spec:
               value: "prod"
           resources:
             requests:
-              memory: "256Mi"
+              memory: "128Mi"
               cpu: "250m"
             limits:
-              memory: "512Mi"
+              memory: "256Mi"
               cpu: "500m"

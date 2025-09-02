@@ -16,8 +16,6 @@ spec:
     spec:
       imagePullSecrets:
         - name: acr-secret
-      nodeSelector:
-        workload-type: stateful-services
       containers:
         - name: mysql
           image: mysql:8.0

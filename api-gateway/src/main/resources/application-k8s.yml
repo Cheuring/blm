@@ -1,0 +1,83 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # 认证中心路由
+        - id: auth-center
+          uri: lb://auth-center
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0
+
+        # 用户服务路由
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+            - Path=/api/history/**
+            - Path=/api/favorites/**
+            - Path=/api/addresses/**
+          filters:
+            - StripPrefix=0
+
+        # 订单服务路由
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=0
+
+        # 商店服务路由
+        - id: store-service
+          uri: lb://store-service
+          predicates:
+            - Path=/api/stores/**
+            - Path=/api/categories/**
+            - Path=/api/dishes/**
+          filters:
+            - StripPrefix=0
+
+        # 骑手服务路由
+        - id: rider-service
+          uri: lb://rider-service
+          predicates:
+            - Path=/api/riders/**
+            - Path=/api/delivery/**
+          filters:
+            - StripPrefix=0
+
+        # 管理服务路由
+        - id: admin-service
+          uri: lb://admin-service
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - StripPrefix=0
+
+        # 文件服务路由
+        - id: file-service
+          uri: lb://file-service
+          predicates:
+            - Path=/api/files/**
+          filters:
+            - StripPrefix=0
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-service:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

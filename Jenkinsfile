@@ -117,7 +117,7 @@ pipeline {
                         for (service in env.BACKEND_SERVICES.split()) {
                             def currentService = service
                             // 假设您的 deployment 名称与服务名一致，后面加上 '-deployment'
-                            def deploymentName = "${currentService}-deployment"
+                            def deploymentName = "${currentService}"
                             echo "Checking rollout status for ${deploymentName}..."
                             sh "ssh ${K8S_USER_HOST} 'kubectl rollout status deployment/${deploymentName} --namespace ${K8S_NAMESPACE}'"
                         }

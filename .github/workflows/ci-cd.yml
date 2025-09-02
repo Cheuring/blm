@@ -109,46 +109,67 @@ jobs:
 
   deploy-to-k8s:
     needs: build-and-push
-    runs-on: ubuntu-latest
+    runs-on: build-and-push
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/micro_k8s'
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
+    - name: Verify local Kubernetes cluster
+      run: |
+        echo "Checking local Kubernetes cluster..."
+        kubectl cluster-info
+        kubectl get nodes
+        kubectl get namespaces
 
-    - name: Configure kubectl for local cluster
+    - name: Configure kubectl
       run: |
         mkdir -p $HOME/.kube
         echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
-        kubectl config current-context
+        chmod 600 $HOME/.kube/config
 
-    - name: Deploy to Kubernetes
+        # 验证连接
+        kubectl config current-context
+        kubectl get nodes
+
+    - name: Deploy to Local Kubernetes
       run: |
+        echo "Deploying to local Kubernetes cluster..."
+        
         # 应用 Kubernetes 配置
         kubectl apply -f k8s/
         
-        # 更新镜像标签
-        kubectl set image deployment/eureka-server eureka-server=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/eureka-server:${{ github.sha }} -n blm-microservices
-        kubectl set image deployment/config-server config-server=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/config-server:${{ github.sha }} -n blm-microservices
-        kubectl set image deployment/api-gateway api-gateway=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/api-gateway:${{ github.sha }} -n blm-microservices
-        kubectl set image deployment/auth-center auth-center=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/auth-center:${{ github.sha }} -n blm-microservices
-        kubectl set image deployment/user-service user-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/user-service:${{ github.sha }} -n blm-microservices
-        kubectl set image deployment/order-service order-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/order-service:${{ github.sha }} -n blm-microservices
-        kubectl set image deployment/store-service store-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/store-service:${{ github.sha }} -n blm-microservices
-        kubectl set image deployment/rider-service rider-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/rider-service:${{ github.sha }} -n blm-microservices
-        kubectl set image deployment/admin-service admin-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/admin-service:${{ github.sha }} -n blm-microservices
-        kubectl set image deployment/file-service file-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/file-service:${{ github.sha }} -n blm-microservices
+        # 更新镜像标签 - 使用分支名作为标签
+        TAG="${{ github.ref_name }}-${{ github.sha }}"
+        
+        echo "Updating images with tag: $TAG"
+        
+        kubectl set image deployment/eureka-server eureka-server=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/eureka-server:$TAG -n blm-microservices
+        kubectl set image deployment/config-server config-server=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/config-server:$TAG -n blm-microservices
+        kubectl set image deployment/api-gateway api-gateway=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/api-gateway:$TAG -n blm-microservices
+        kubectl set image deployment/auth-center auth-center=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/auth-center:$TAG -n blm-microservices
+        kubectl set image deployment/user-service user-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/user-service:$TAG -n blm-microservices
+        kubectl set image deployment/order-service order-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/order-service:$TAG -n blm-microservices
+        kubectl set image deployment/store-service store-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/store-service:$TAG -n blm-microservices
+        kubectl set image deployment/rider-service rider-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/rider-service:$TAG -n blm-microservices
+        kubectl set image deployment/admin-service admin-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/admin-service:$TAG -n blm-microservices
+        kubectl set image deployment/file-service file-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/file-service:$TAG -n blm-microservices
 
     - name: Verify deployment
       run: |
+        echo "Verifying deployment status..."
+        
+        # 等待部署完成
         kubectl rollout status deployment/eureka-server -n blm-microservices --timeout=300s
         kubectl rollout status deployment/api-gateway -n blm-microservices --timeout=300s
+        
+        # 显示所有部署状态
+        kubectl get deployments -n blm-microservices
         kubectl get pods -n blm-microservices
+        
+        # 显示服务状态
+        kubectl get services -n blm-microservices
 
   notify:
     needs: [test, build-and-push, deploy-to-k8s]

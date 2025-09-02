@@ -16,8 +16,6 @@ spec:
     spec:
       imagePullSecrets:
         - name: acr-secret
-      nodeSelector:
-        workload-type: backend-apps
       containers:
         - name: admin-service
           image: admin-service:latest
@@ -28,8 +26,8 @@ spec:
               value: "prod"
           resources:
             requests:
-              memory: "256Mi"
+              memory: "128Mi"
               cpu: "250m"
             limits:
-              memory: "512Mi"
+              memory: "256Mi"
               cpu: "500m"

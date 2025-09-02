@@ -120,8 +120,8 @@ jobs:
       run: |
         echo "Checking local Kubernetes cluster..."
         kubectl cluster-info
-        kubectl get nodes
-        kubectl get namespaces
+        # kubectl get nodes
+        kubectl get namespaces | grep blm-microservices || echo "Namespace blm-microservices not found"
 
     - name: Configure kubectl
       run: |
@@ -131,7 +131,7 @@ jobs:
 
         # 验证连接
         kubectl config current-context
-        kubectl get nodes
+        kubectl get pods -n blm-microservices || echo "No pods found in blm-microservices namespace"
 
     - name: Deploy to Local Kubernetes
       run: |

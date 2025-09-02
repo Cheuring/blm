@@ -57,34 +57,25 @@
         ORDER BY r.created_at DESC
     </select>
 
-    <insert id="save" parameterType="com.blm.common.entity.Review" useGeneratedKeys="true" keyProperty="id">
-        <if test="id == null">
+    <insert id="save" parameterType="com.blm.common.entity.Review" useGeneratedKeys="true" keyProperty="review.id">
+        <if test="review.id == null">
             INSERT INTO review(
                 parent_id, order_id, user_id, store_id, rider_id,
                 store_rating, rider_rating, content, images,
                 reply, reply_time, is_anonymous, created_at, updated_at
             ) VALUES (
-                #{parentId}, #{orderId}, #{userId}, #{storeId}, #{riderId},
-                #{storeRating}, #{riderRating}, #{content}, #{images},
-                #{reply}, #{replyTime}, #{isAnonymous}, #{createdAt}, #{updatedAt}
+                #{review.parentId}, #{review.orderId}, #{review.userId}, #{review.storeId}, #{review.riderId},
+                #{review.storeRating}, #{review.riderRating}, #{review.content}, #{review.images},
+                #{review.reply}, #{review.replyTime}, #{review.isAnonymous}, #{review.createdAt}, #{review.updatedAt}
             )
         </if>
-        <if test="id != null">
+        <if test="review.id != null">
             UPDATE review SET
-                <if test="parentId != null">parent_id = #{parentId},</if>
-                <if test="orderId != null">order_id = #{orderId},</if>
-                <if test="userId != null">user_id = #{userId},</if>
-                <if test="storeId != null">store_id = #{storeId},</if>
-                <if test="riderId != null">rider_id = #{riderId},</if>
-                <if test="storeRating != null">store_rating = #{storeRating},</if>
-                <if test="riderRating != null">rider_rating = #{riderRating},</if>
-                <if test="content != null">content = #{content},</if>
-                <if test="images != null">images = #{images},</if>
-                <if test="reply != null">reply = #{reply},</if>
-                <if test="replyTime != null">reply_time = #{replyTime},</if>
-                <if test="isAnonymous != null">is_anonymous = #{isAnonymous},</if>
-                updated_at = #{updatedAt}
-            WHERE id = #{id}
+                <if test="review.parentId != null">parent_id = #{review.parentId},</if>
+                <if test="review.orderId != null">order_id = #{review.orderId},</if>
+                <if test="review.userId != null">user_id = #{review.userId},</if>
+                <if test="review.storeId != null">store_id = #{review.storeId},</if>
+                <if test="review.riderId != null">rider_id = #{review.riderId},</if>
         </if>
     </insert>
 </mapper>

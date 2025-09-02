@@ -17,6 +17,7 @@ import com.blm.order.repository.ReviewRepository;
 import com.blm.order.service.OrderService;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+
+@Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
 
@@ -316,6 +319,11 @@ public class OrderServiceImpl implements OrderService {
         review.setCreatedAt(LocalDateTime.now());
         review.setUpdatedAt(LocalDateTime.now());
         review.setId(null);
+        review.setOrderId(orderId);
+        review.setUserId(userId);
+        review.setStoreId(order.getStoreId());
+
+        log.info("add review: {}", review);
 
         reviewRepository.save(review);
 

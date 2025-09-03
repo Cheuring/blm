@@ -108,7 +108,7 @@ jobs:
   #       cache-to: type=gha,mode=max
 
   deploy-to-k8s:
-    needs: build-and-push
+    # needs: build-and-push
     runs-on: self-hosted
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/micro_k8s'
     

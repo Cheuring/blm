@@ -120,17 +120,10 @@ jobs:
       run: |
         echo "Checking local Kubernetes cluster..."
         kubectl cluster-info
-        # kubectl get nodes
+        kubectl get nodes
         kubectl get namespaces | grep blm-microservices || echo "Namespace blm-microservices not found"
-
-    - name: Configure kubectl
-      run: |
-        KUBE_CONFIG_PATH="$RUNNER_TEMP/kubeconfig_$(date +%s)"
-        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > "$KUBE_CONFIG_PATH"
-        echo "KUBECONFIG=$KUBE_CONFIG_PATH" >> "$GITHUB_ENV"
-        chmod 600 "$KUBE_CONFIG_PATH"
-
-        # 验证连接
+        
+        # 验证当前 kubectl 配置
         kubectl config current-context
         kubectl get pods -n blm-microservices || echo "No pods found in blm-microservices namespace"
 
@@ -138,12 +131,13 @@ jobs:
       run: |
         echo "Deploying to local Kubernetes cluster..."
         
-        # 确保 GitHub Registry Secret 存在
-        kubectl get secret github-registry-secret -n blm-microservices || \
+        # 创建或更新 GitHub Registry Secret
+        echo "Creating/updating GitHub Container Registry secret..."
+        kubectl delete secret github-registry-secret -n blm-microservices --ignore-not-found=true
         kubectl create secret docker-registry github-registry-secret \
           --docker-server=ghcr.io \
           --docker-username=${{ github.actor }} \
-          --docker-password=${{ secrets.GITHUB_TOKEN }} \
+          --docker-password=${{ secrets.GHCR_TOKEN }} \
           --namespace=blm-microservices
         
         # 应用 Kubernetes 配置

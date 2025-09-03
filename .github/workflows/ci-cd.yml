@@ -125,9 +125,10 @@ jobs:
 
     - name: Configure kubectl
       run: |
-        mkdir -p $HOME/.kube
-        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
-        chmod 600 $HOME/.kube/config
+        KUBE_CONFIG_PATH="$RUNNER_TEMP/kubeconfig_$(date +%s)"
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > "$KUBE_CONFIG_PATH"
+        echo "KUBECONFIG=$KUBE_CONFIG_PATH" >> "$GITHUB_ENV"
+        chmod 600 "$KUBE_CONFIG_PATH"
 
         # 验证连接
         kubectl config current-context

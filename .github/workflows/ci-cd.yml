@@ -51,16 +51,16 @@ jobs:
     strategy:
       matrix:
         service: 
-          - eureka-server
+          # - eureka-server
           - config-server
-          - api-gateway
-          - auth-center
-          - user-service
-          - order-service
-          - store-service
-          - rider-service
-          - admin-service
-          - file-service
+          # - api-gateway
+          # - auth-center
+          # - user-service
+          # - order-service
+          # - store-service
+          # - rider-service
+          # - admin-service
+          # - file-service
 
     steps:
     - name: Checkout code

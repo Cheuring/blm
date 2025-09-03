@@ -2,23 +2,11 @@ server:
   port: 8088
 
 spring:
-  application:
-    name: config-server
-  profiles:
-    active: native
   cloud:
     config:
       server:
-        bootstrap: true
-        composite:
-          - type: native
-            search-locations: classpath:/config-repo/,classpath:/config-repo/{profile}/
-        # 支持多环境配置
-        default-label: master
-        # 启用配置文件的环境感知
-        accept-empty: false
-        # 配置覆盖策略
-        override-none: false
+        native:
+          search-locations: classpath:/config-repo/,classpath:/config-repo/{profile}/
 
 # Eureka客户端配置
 eureka:

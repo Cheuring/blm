@@ -142,7 +142,7 @@ jobs:
         kubectl apply -f k8s/
         
         # 更新镜像标签 - 使用分支名作为标签
-        TAG="${{ github.ref_name }}-${{ github.sha }}"
+        TAG="latest"
         
         echo "Updating images with tag: $TAG"
         

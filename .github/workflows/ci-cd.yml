@@ -14,7 +14,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME_PREFIX: ${{ github.repository }}
+  IMAGE_NAME_PREFIX: cheuring/blm
 
 jobs:
   test:

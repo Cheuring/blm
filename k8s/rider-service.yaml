@@ -19,7 +19,7 @@ spec:
       - name: rider-service
         image: ghcr.io/cheuring/blm/rider-service:latest
         ports:
-        - containerPort: 8086
+        - containerPort: 8085
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "k8s"
@@ -44,13 +44,13 @@ spec:
         livenessProbe:
           httpGet:
             path: /actuator/health
-            port: 8086
+            port: 8085
           initialDelaySeconds: 90
           periodSeconds: 30
         readinessProbe:
           httpGet:
             path: /actuator/health
-            port: 8086
+            port: 8085
           initialDelaySeconds: 60
           periodSeconds: 10
         resources:
@@ -71,6 +71,6 @@ spec:
   selector:
     app: rider-service
   ports:
-  - port: 8086
-    targetPort: 8086
+  - port: 8085
+    targetPort: 8085
   type: ClusterIP

@@ -19,7 +19,7 @@ spec:
       - name: user-service
         image: ghcr.io/cheuring/blm/user-service:latest
         ports:
-        - containerPort: 8083
+        - containerPort: 8081
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "k8s"
@@ -44,13 +44,13 @@ spec:
         livenessProbe:
           httpGet:
             path: /actuator/health
-            port: 8083
+            port: 8081
           initialDelaySeconds: 90
           periodSeconds: 30
         readinessProbe:
           httpGet:
             path: /actuator/health
-            port: 8083
+            port: 8081
           initialDelaySeconds: 60
           periodSeconds: 10
         resources:
@@ -71,6 +71,6 @@ spec:
   selector:
     app: user-service
   ports:
-  - port: 8083
-    targetPort: 8083
+  - port: 8081
+    targetPort: 8081
   type: ClusterIP

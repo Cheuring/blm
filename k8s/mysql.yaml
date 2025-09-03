@@ -90,9 +90,6 @@ data:
     (2, 'FOOD', 2),
     (2, 'FOOD', 3);
 
-    -- 商家服务表结构
-    USE store_db;
-
     -- 店铺分类表
     CREATE TABLE store_category (
         id BIGINT PRIMARY KEY AUTO_INCREMENT,

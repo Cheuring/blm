@@ -17,96 +17,96 @@ env:
   IMAGE_NAME_PREFIX: cheuring/blm
 
 jobs:
-  # test:
-  #   runs-on: ubuntu-latest
-  #   name: Run Tests
+  test:
+    runs-on: ubuntu-latest
+    name: Run Tests
     
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v4
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-  #   - name: Set up JDK 21
-  #     uses: actions/setup-java@v4
-  #     with:
-  #       java-version: '21'
-  #       distribution: 'temurin'
-  #       cache: maven
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
 
-  #   - name: Run tests
-  #     run: mvn clean test
+    - name: Run tests
+      run: mvn clean test
 
-  #   - name: Generate test report
-  #     uses: dorny/test-reporter@v1
-  #     if: success() || failure()
-  #     with:
-  #       name: Maven Tests
-  #       path: '**/target/surefire-reports/*.xml'
-  #       reporter: java-junit
+    - name: Generate test report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
+      with:
+        name: Maven Tests
+        path: '**/target/surefire-reports/*.xml'
+        reporter: java-junit
 
-  # build-and-push:
-  #   needs: test
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/micro_k8s'
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/micro_k8s'
     
-  #   strategy:
-  #     matrix:
-  #       service: 
-  #         - eureka-server
-  #         - config-server
-  #         - api-gateway
-  #         - auth-center
-  #         - user-service
-  #         - order-service
-  #         - store-service
-  #         - rider-service
-  #         - admin-service
-  #         - file-service
+    strategy:
+      matrix:
+        service: 
+          - eureka-server
+          - config-server
+          - api-gateway
+          - auth-center
+          - user-service
+          - order-service
+          - store-service
+          - rider-service
+          - admin-service
+          - file-service
 
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v4
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-  #   - name: Set up JDK 21
-  #     uses: actions/setup-java@v4
-  #     with:
-  #       java-version: '21'
-  #       distribution: 'temurin'
-  #       cache: maven
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
 
-  #   - name: Build with Maven
-  #     run: mvn clean package -DskipTests
+    - name: Build with Maven
+      run: mvn clean package -DskipTests
 
-  #   - name: Set up Docker Buildx
-  #     uses: docker/setup-buildx-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-  #   - name: Log in to Container Registry
-  #     uses: docker/login-action@v3
-  #     with:
-  #       registry: ${{ env.REGISTRY }}
-  #       username: ${{ github.actor }}
-  #       password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-  #   - name: Extract metadata
-  #     id: meta
-  #     uses: docker/metadata-action@v5
-  #     with:
-  #       images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/${{ matrix.service }}
-  #       tags: |
-  #         type=ref,event=branch
-  #         type=ref,event=pr
-  #         type=sha,prefix={{branch}}-
-  #         type=raw,value=latest,enable={{is_default_branch}}
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/${{ matrix.service }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
 
-  #   - name: Build and push Docker image
-  #     uses: docker/build-push-action@v5
-  #     with:
-  #       context: ./${{ matrix.service }}
-  #       push: true
-  #       tags: ${{ steps.meta.outputs.tags }}
-  #       labels: ${{ steps.meta.outputs.labels }}
-  #       cache-from: type=gha
-  #       cache-to: type=gha,mode=max
-  #       platforms: linux/amd64,linux/arm64  # 添加多架构支持
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./${{ matrix.service }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64  # 添加多架构支持
 
 
   deploy-to-k8s:
@@ -226,36 +226,36 @@ jobs:
         echo "💚 Health Check:"
         kubectl get pods -n blm-microservices -o wide
 
-  # notify:
-  #   needs: [test, build-and-push, deploy-to-k8s]
-  #   runs-on: ubuntu-latest
-  #   if: always()
+  notify:
+    needs: [test, build-and-push, deploy-to-k8s]
+    runs-on: ubuntu-latest
+    if: always()
     
-  #   steps:
-  #   - name: Notify deployment status
-  #     if: always()
-  #     run: |
-  #       echo "==================================================="
-  #       echo "           BLM 微服务部署状态报告"
-  #       echo "==================================================="
-  #       echo "🧪 测试结果: ${{ needs.test.result }}"
-  #       echo "🏗️ 构建结果: ${{ needs.build-and-push.result }}"
-  #       echo "🚀 部署结果: ${{ needs.deploy-to-k8s.result }}"
-  #       echo "==================================================="
+    steps:
+    - name: Notify deployment status
+      if: always()
+      run: |
+        echo "==================================================="
+        echo "           BLM 微服务部署状态报告"
+        echo "==================================================="
+        echo "🧪 测试结果: ${{ needs.test.result }}"
+        echo "🏗️ 构建结果: ${{ needs.build-and-push.result }}"
+        echo "🚀 部署结果: ${{ needs.deploy-to-k8s.result }}"
+        echo "==================================================="
         
-  #       if [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.build-and-push.result }}" == "success" ] && [ "${{ needs.deploy-to-k8s.result }}" == "success" ]; then
-  #         echo "✅ 所有阶段执行成功！微服务已按正确顺序部署："
-  #         echo "   1️⃣ Eureka Server (服务注册中心)"
-  #         echo "   2️⃣ Config Server (配置中心)"
-  #         echo "   3️⃣ 其他业务微服务"
-  #         echo "🎉 BLM 微服务平台部署完成！"
-  #       elif [ "${{ needs.deploy-to-k8s.result }}" == "failure" ]; then
-  #         echo "❌ 部署失败！请检查 Kubernetes 集群状态和微服务配置"
-  #       elif [ "${{ needs.build-and-push.result }}" == "failure" ]; then
-  #         echo "❌ 构建或推送镜像失败！请检查代码和 Docker 配置"
-  #       elif [ "${{ needs.test.result }}" == "failure" ]; then
-  #         echo "❌ 测试失败！请修复测试问题后重新提交"
-  #       else
-  #         echo "⚠️ 部分阶段未成功执行，请检查具体日志"
-  #       fi
-  #       echo "==================================================="
+        if [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.build-and-push.result }}" == "success" ] && [ "${{ needs.deploy-to-k8s.result }}" == "success" ]; then
+          echo "✅ 所有阶段执行成功！微服务已按正确顺序部署："
+          echo "   1️⃣ Eureka Server (服务注册中心)"
+          echo "   2️⃣ Config Server (配置中心)"
+          echo "   3️⃣ 其他业务微服务"
+          echo "🎉 BLM 微服务平台部署完成！"
+        elif [ "${{ needs.deploy-to-k8s.result }}" == "failure" ]; then
+          echo "❌ 部署失败！请检查 Kubernetes 集群状态和微服务配置"
+        elif [ "${{ needs.build-and-push.result }}" == "failure" ]; then
+          echo "❌ 构建或推送镜像失败！请检查代码和 Docker 配置"
+        elif [ "${{ needs.test.result }}" == "failure" ]; then
+          echo "❌ 测试失败！请修复测试问题后重新提交"
+        else
+          echo "⚠️ 部分阶段未成功执行，请检查具体日志"
+        fi
+        echo "==================================================="

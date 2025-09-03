@@ -1,0 +1,25 @@
+server:
+  port: 8088
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+      
+# MinIO配置
+minio:
+  endpoint: http://minio-service:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: blm-files
+
+# Eureka配置 - K8S环境
+eureka:
+  instance:
+    hostname: file-service
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+  client:
+    service-url:
+      defaultZone: http://eureka-service:8761/eureka/

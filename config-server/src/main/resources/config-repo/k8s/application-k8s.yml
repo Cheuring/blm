@@ -1,0 +1,36 @@
+# K8S 环境通用配置
+info:
+  app:
+    name: BLM Microservices Platform
+    description: 饱了么微服务平台 - Kubernetes环境
+    version: 1.0.0
+    environment: kubernetes
+
+# 通用配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,refresh,env
+  endpoint:
+    health:
+      show-details: always
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.blm: DEBUG
+    org.springframework.cloud: DEBUG
+
+# Eureka 通用配置
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-service:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30

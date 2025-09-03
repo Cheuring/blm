@@ -1,0 +1,76 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # 认证中心路由
+        - id: auth-center
+          uri: lb://auth-center
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0
+
+        # 用户服务路由
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**,/api/history/**,/api/favorites/**,/api/addresses/**
+          filters:
+            - StripPrefix=0
+
+        # 商家服务路由
+        - id: store-service
+          uri: lb://store-service
+          predicates:
+            - Path=/api/stores/**,/api/foods/**,/api/categories/**
+          filters:
+            - StripPrefix=0
+
+        # 订单服务路由
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**,/api/cart/**
+          filters:
+            - StripPrefix=0
+
+        # 骑手服务路由
+        - id: rider-service
+          uri: lb://rider-service
+          predicates:
+            - Path=/api/riders/**,/api/delivery/**
+          filters:
+            - StripPrefix=0
+
+        # 管理服务路由
+        - id: admin-service
+          uri: lb://admin-service
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - StripPrefix=0
+
+        # 文件服务路由
+        - id: file-service
+          uri: lb://file-service
+          predicates:
+            - Path=/api/files/**
+          filters:
+            - StripPrefix=0
+
+# Eureka配置 - K8S环境
+eureka:
+  instance:
+    hostname: api-gateway
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+  client:
+    service-url:
+      defaultZone: http://eureka-service:8761/eureka/

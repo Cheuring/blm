@@ -1,0 +1,22 @@
+# 默认配置文件
+info:
+  app:
+    name: BLM Microservices Platform
+    description: 饱了么微服务平台
+    version: 1.0.0
+
+# 通用配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.blm: DEBUG

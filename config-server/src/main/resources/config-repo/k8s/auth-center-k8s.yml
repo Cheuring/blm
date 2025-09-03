@@ -1,0 +1,29 @@
+server:
+  port: 8082
+
+spring:
+  redis:
+    host: redis-service
+    port: 6379
+    database: 0
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
+# JWT配置
+jwt:
+  secret: blm-secret-key-for-jwt-token-generation-2023
+  expiration: 86400000  # 24小时
+
+# Eureka配置 - K8S环境
+eureka:
+  instance:
+    hostname: auth-center
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+  client:
+    service-url:
+      defaultZone: http://eureka-service:8761/eureka/

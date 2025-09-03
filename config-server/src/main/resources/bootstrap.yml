@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        # 启用 bootstrap 模式
+        bootstrap: true
+        # 本地文件配置
+        native:
+          search-locations: classpath:/config-repo/,classpath:/config-repo/{profile}/

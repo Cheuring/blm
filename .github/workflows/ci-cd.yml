@@ -133,17 +133,17 @@ jobs:
       run: |
         echo "Deploying to local Kubernetes cluster..."
 
-        # 创建或更新 GitHub Registry Secret
-        echo "Creating/updating GitHub Container Registry secret..."
-        kubectl delete secret github-registry-secret -n blm-microservices --ignore-not-found=true
+        # # 创建或更新 GitHub Registry Secret
+        # echo "Creating/updating GitHub Container Registry secret..."
+        # kubectl delete secret github-registry-secret -n blm-microservices --ignore-not-found=true
 
-        # 验证凭据是否有效
-        echo "Validating Docker credentials..."
-        kubectl create secret docker-registry github-registry-secret \
-          --docker-server=ghcr.io \
-          --docker-username=${{ github.actor }} \
-          --docker-password=${{ secrets.GHCR_TOKEN }} \
-          --namespace=blm-microservices
+        # # 验证凭据是否有效
+        # echo "Validating Docker credentials..."
+        # kubectl create secret docker-registry github-registry-secret \
+        #   --docker-server=ghcr.io \
+        #   --docker-username=${{ github.actor }} \
+        #   --docker-password=${{ secrets.GHCR_TOKEN }} \
+        #   --namespace=blm-microservices
         
         # 应用基础设施配置（命名空间、数据库等）
         kubectl apply -f k8s/namespace.yaml

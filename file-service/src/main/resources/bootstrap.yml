@@ -4,7 +4,7 @@ spring:
   cloud:
     config:
       uri: http://localhost:8888
-      profile: dev
+      #profile: dev
       fail-fast: false
       retry:
         initial-interval: 1000

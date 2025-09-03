@@ -4,8 +4,8 @@ spring:
   cloud:
     config:
       uri: http://localhost:8888
-      profile: dev
-      fail-fast: true
+      #profile: dev
+      fail-fast: false
       retry:
         initial-interval: 1000
         max-attempts: 6

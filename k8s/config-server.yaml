@@ -13,6 +13,8 @@ spec:
       labels:
         app: config-server
     spec:
+      imagePullSecrets:
+      - name: github-registry-secret
       containers:
       - name: config-server
         image: ghcr.io/cheuring/blm/config-server:latest

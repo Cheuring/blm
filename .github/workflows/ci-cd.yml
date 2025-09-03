@@ -138,6 +138,14 @@ jobs:
       run: |
         echo "Deploying to local Kubernetes cluster..."
         
+        # 确保 GitHub Registry Secret 存在
+        kubectl get secret github-registry-secret -n blm-microservices || \
+        kubectl create secret docker-registry github-registry-secret \
+          --docker-server=ghcr.io \
+          --docker-username=${{ github.actor }} \
+          --docker-password=${{ secrets.GITHUB_TOKEN }} \
+          --namespace=blm-microservices
+        
         # 应用 Kubernetes 配置
         kubectl apply -f k8s/
         

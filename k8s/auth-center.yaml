@@ -13,6 +13,8 @@ spec:
       labels:
         app: auth-center
     spec:
+      imagePullSecrets:
+      - name: github-registry-secret
       containers:
       - name: auth-center
         image: ghcr.io/cheuring/blm/auth-center:latest

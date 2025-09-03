@@ -13,6 +13,8 @@ spec:
       labels:
         app: api-gateway
     spec:
+      imagePullSecrets:
+      - name: github-registry-secret
       containers:
       - name: api-gateway
         image: ghcr.io/cheuring/blm/api-gateway:latest

@@ -13,6 +13,8 @@ spec:
       labels:
         app: user-service
     spec:
+      imagePullSecrets:
+      - name: github-registry-secret
       containers:
       - name: user-service
         image: ghcr.io/cheuring/blm/user-service:latest

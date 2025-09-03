@@ -13,6 +13,8 @@ spec:
       labels:
         app: admin-service
     spec:
+      imagePullSecrets:
+      - name: github-registry-secret
       containers:
       - name: admin-service
         image: ghcr.io/cheuring/blm/admin-service:latest

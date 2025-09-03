@@ -13,6 +13,8 @@ spec:
       labels:
         app: rider-service
     spec:
+      imagePullSecrets:
+      - name: github-registry-secret
       containers:
       - name: rider-service
         image: ghcr.io/cheuring/blm/rider-service:latest

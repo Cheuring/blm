@@ -13,6 +13,8 @@ spec:
       labels:
         app: order-service
     spec:
+      imagePullSecrets:
+      - name: github-registry-secret
       containers:
       - name: order-service
         image: ghcr.io/cheuring/blm/order-service:latest

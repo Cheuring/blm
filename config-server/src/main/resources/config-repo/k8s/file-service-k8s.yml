@@ -1,5 +1,5 @@
 server:
-  port: 8088
+  port: 8089
 
 spring:
   servlet:
@@ -12,7 +12,8 @@ minio:
   endpoint: http://minio-service:9000
   access-key: minioadmin
   secret-key: minioadmin
-  bucket-name: blm-files
+  bucket-name: blm
+  prefix: http://minio-service
 
 # Eureka配置 - K8S环境
 eureka:

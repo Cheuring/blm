@@ -23,6 +23,8 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "k8s"
+        - name: SPRING_CLOUD_CONFIG_URI
+          value: http://config-server:8888
         - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
           value: "http://eureka-service:8761/eureka/"
         livenessProbe:
@@ -70,7 +72,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: blm.local
+  - host: 
     http:
       paths:
       - path: /

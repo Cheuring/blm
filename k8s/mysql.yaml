@@ -194,9 +194,9 @@ data:
     ('甜品饮品', '/icons/dessert.png', 5);
 
     -- 插入店铺测试数据
-    INSERT INTO store (merchant_id, name, logo, description, phone, address, longitude, latitude, business_hours, delivery_fee, min_order_amount, category_id, status) VALUES
-    (3, '川味小厨', '/logos/store1.jpg', '正宗川菜，香辣美味', '010-12345678', '北京市朝阳区建国路88号', 116.4074, 39.9042, '09:00-22:00', 5.00, 20.00, 2, 'OPEN'),
-    (3, '汉堡王', '/logos/store2.jpg', '美味汉堡，快速送达', '010-87654321', '北京市海淀区中关村大街1号', 116.3112, 39.9991, '10:00-23:00', 3.00, 15.00, 1, 'OPEN');
+    INSERT INTO store (merchant_id, name, logo, description, phone, address, longitude, latitude, business_hours, delivery_fee, min_order_amount, category_id, status, is_featured) VALUES
+    (3, '川味小厨', '/logos/store1.jpg', '正宗川菜，香辣美味', '010-12345678', '北京市朝阳区建国路88号', 116.4074, 39.9042, '09:00-22:00', 5.00, 20.00, 2, 'OPEN', 1),
+    (3, '汉堡王', '/logos/store2.jpg', '美味汉堡，快速送达', '010-87654321', '北京市海淀区中关村大街1号', 116.3112, 39.9991, '10:00-23:00', 3.00, 15.00, 1, 'OPEN', 0);
 
     -- 插入商品分类测试数据
     INSERT INTO food_category (store_id, name, sort) VALUES

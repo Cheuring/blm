@@ -52,6 +52,7 @@ jobs:
       matrix:
         service: 
           - eureka-server
+          - config-server
           - api-gateway
           - auth-center
           - user-service
@@ -162,7 +163,17 @@ jobs:
         echo "⏳ Waiting for Eureka Server to be ready..."
         kubectl rollout status deployment/eureka-server -n blm-microservices --timeout=300s
         kubectl wait --for=condition=ready pod -l app=eureka-server -n blm-microservices --timeout=300s
+
+        # 第二阶段：部署 Config Server
+        echo "🚀 Phase 2: Deploying Config Server..."
+        kubectl apply -f k8s/config-server.yaml
+        kubectl set image deployment/config-server config-server=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/config-server:$TAG -n blm-microservices
         
+        # 等待 Config Server 启动完成
+        echo "⏳ Waiting for Config Server to be ready..."
+        kubectl rollout status deployment/config-server -n blm-microservices --timeout=300s
+        kubectl wait --for=condition=ready pod -l app=config-server -n blm-microservices --timeout=300s
+
         # 第三阶段：部署其他微服务
         echo "🚀 Phase 3: Deploying other microservices..."
         kubectl apply -f k8s/api-gateway.yaml
@@ -235,7 +246,8 @@ jobs:
         if [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.build-and-push.result }}" == "success" ] && [ "${{ needs.deploy-to-k8s.result }}" == "success" ]; then
           echo "✅ 所有阶段执行成功！微服务已按正确顺序部署："
           echo "   1️⃣ Eureka Server (服务注册中心)"
-          echo "   2️⃣ 其他业务微服务"
+          echo "   2️⃣ Config Server (配置中心)"
+          echo "   3️⃣ 其他业务微服务"
           echo "🎉 BLM 微服务平台部署完成！"
         elif [ "${{ needs.deploy-to-k8s.result }}" == "failure" ]; then
           echo "❌ 部署失败！请检查 Kubernetes 集群状态和微服务配置"

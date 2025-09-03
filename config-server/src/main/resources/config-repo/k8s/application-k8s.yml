@@ -19,9 +19,8 @@ management:
 # 日志配置
 logging:
   level:
-    root: INFO
-    com.blm: DEBUG
-    org.springframework.cloud: DEBUG
+    root: WARN
+    com.blm: INFO
 
 # Eureka 通用配置
 eureka:

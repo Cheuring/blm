@@ -47,7 +47,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: config-service
+  name: config-server
   namespace: blm-microservices
 spec:
   selector:

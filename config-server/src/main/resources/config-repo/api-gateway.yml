@@ -21,7 +21,10 @@ spring:
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/api/users/**,/api/history/**,/api/favorites/**,/api/addresses/**
+            - Path=/api/users/**
+            - Path=/api/history/**
+            - Path=/api/favorites/**
+            - Path=/api/addresses/**
           filters:
             - StripPrefix=0
 
@@ -29,7 +32,10 @@ spring:
         - id: store-service
           uri: lb://store-service
           predicates:
-            - Path=/api/stores/**,/api/merchant/**,/api/categories/**,/api/foods/**
+            - Path=/api/stores/**
+            - Path=/api/merchant/**
+            - Path=/api/categories/**
+            - Path=/api/foods/**
           filters:
             - StripPrefix=0
 
@@ -37,7 +43,8 @@ spring:
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=/api/orders/**,/api/cart/**
+            - Path=/api/orders/**
+            - Path=/api/cart/**
           filters:
             - StripPrefix=0
 

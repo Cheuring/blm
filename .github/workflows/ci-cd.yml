@@ -180,17 +180,17 @@ jobs:
         # 显示服务状态
         kubectl get services -n blm-microservices
 
-  notify:
-    needs: [test, build-and-push, deploy-to-k8s]
-    runs-on: ubuntu-latest
-    if: always()
+  # notify:
+  #   needs: [test, build-and-push, deploy-to-k8s]
+  #   runs-on: ubuntu-latest
+  #   if: always()
     
-    steps:
-    - name: Notify deployment status
-      if: always()
-      run: |
-        if [ "${{ needs.deploy-to-k8s.result }}" == "success" ]; then
-          echo "✅ Deployment successful!"
-        else
-          echo "❌ Deployment failed!"
-        fi
+  #   steps:
+  #   - name: Notify deployment status
+  #     if: always()
+  #     run: |
+  #       if [ "${{ needs.deploy-to-k8s.result }}" == "success" ]; then
+  #         echo "✅ Deployment successful!"
+  #       else
+  #         echo "❌ Deployment failed!"
+  #       fi

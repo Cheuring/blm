@@ -1,27 +1,11 @@
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/order_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
-    username: root
-    password: 116688
-    driver-class-name: com.mysql.cj.jdbc.Driver
-#  redis:
-#    host: 127.0.0.1
-#    port: 6379
-#    timeout: 3000ms
-#    lettuce:
-#      pool:
-#        max-active: 8
-#        max-idle: 8
-#        min-idle: 0
-
 server:
-  port: 8084
+  port: 8081
 
 # Eureka配置
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://eureka-service:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
   instance:
@@ -29,15 +13,43 @@ eureka:
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
 
+# MyBatis配置
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  type-aliases-package: com.blm.common.entity
 
+# 分页插件配置
+pagehelper:
+  helper-dialect: mysql
+  reasonable: true
+  support-methods-arguments: true
+  params: count=countSql
+
+
+# OpenAPI配置
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# 日志配置
 logging:
   level:
-    com.blm.order: debug
+    com.blm: debug
     com.blm.common.feign: debug
     # 启用 Feign 客户端的日志
     org.springframework.cloud.openfeign: debug
@@ -54,18 +66,6 @@ feign:
         connectTimeout: 10000
         # 读取超时时间（毫秒）
         readTimeout: 60000
-    
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-  endpoint:
-    health:
-      show-details: always
 
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
+test:
+  dev: local

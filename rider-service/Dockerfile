@@ -8,7 +8,7 @@ WORKDIR /app
 COPY target/*.jar rider-service.jar
 
 # 暴露端口
-EXPOSE 8086
+EXPOSE 8085
 
 # 设置JVM参数优化
 ENV JAVA_OPTS="-Xmx512m -Xms256m -Djava.security.egd=file:/dev/./urandom"

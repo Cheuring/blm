@@ -9,57 +9,482 @@ data:
     USE microservices;
     
     -- 用户表
-    CREATE TABLE IF NOT EXISTS users (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        phone VARCHAR(20) UNIQUE,
-        email VARCHAR(100) UNIQUE,
-        nickname VARCHAR(50),
+    CREATE TABLE user (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        username VARCHAR(50) NOT NULL,
+        password VARCHAR(128) NOT NULL,
+        phone VARCHAR(20) NOT NULL UNIQUE,
+        email VARCHAR(100),
         avatar VARCHAR(255),
-        status TINYINT DEFAULT 1 COMMENT '0-禁用 1-正常',
+        role VARCHAR(20) NOT NULL COMMENT '角色：USER/MERCHANT/RIDER/ADMIN',
+        status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-正常',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_username (username),
+        INDEX idx_phone (phone),
+        INDEX idx_role (role)
     );
-    
-    -- 商家表
-    CREATE TABLE IF NOT EXISTS stores (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    -- 用户地址表
+    CREATE TABLE user_address (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        user_id BIGINT NOT NULL,
+        receiver VARCHAR(50) NOT NULL,
+        phone VARCHAR(20) NOT NULL,
+        province VARCHAR(50) NOT NULL,
+        city VARCHAR(50) NOT NULL,
+        district VARCHAR(50) NOT NULL,
+        detail_address VARCHAR(255) NOT NULL,
+        is_default TINYINT DEFAULT 0 COMMENT '是否默认地址：0-否，1-是',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+        INDEX idx_user_id (user_id)
+    );
+
+    -- 收藏表
+    CREATE TABLE favorite (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        user_id BIGINT NOT NULL,
+        type VARCHAR(20) NOT NULL COMMENT '收藏类型：STORE/FOOD',
+        target_id BIGINT NOT NULL COMMENT '收藏目标ID',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+        INDEX idx_user_id (user_id),
+        INDEX idx_target (type, target_id)
+    );
+
+    -- 浏览历史表
+    CREATE TABLE history (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        user_id BIGINT NOT NULL,
+        type VARCHAR(20) NOT NULL COMMENT '浏览类型：STORE/FOOD',
+        target_id BIGINT NOT NULL COMMENT '浏览目标ID',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+        INDEX idx_user_id (user_id),
+        INDEX idx_target (type, target_id)
+    );
+
+    -- 插入测试数据
+    INSERT INTO user (username, password, phone, email, role, status) VALUES
+    ('admin', '$2a$10$KdDkGThGCEXpfTAYugLMpuAwIU/4eg0cqtlUOSj1QZBLVvGNzgv8u', '13800000001', 'admin@blm.com', 'ADMIN', 1),
+    ('testuser', '$2a$10$KdDkGThGCEXpfTAYugLMpuAwIU/4eg0cqtlUOSj1QZBLVvGNzgv8u', '13800000002', 'user@blm.com', 'USER', 1),
+    ('merchant1', '$2a$10$KdDkGThGCEXpfTAYugLMpuAwIU/4eg0cqtlUOSj1QZBLVvGNzgv8u', '13800000003', 'merchant1@blm.com', 'MERCHANT', 1),
+    ('rider1', '$2a$10$KdDkGThGCEXpfTAYugLMpuAwIU/4eg0cqtlUOSj1QZBLVvGNzgv8u', '13800000004', 'rider1@blm.com', 'RIDER', 1),
+    ('rider2', '$2a$10$KdDkGThGCEXpfTAYugLMpuAwIU/4eg0cqtlUOSj1QZBLVvGNzgv8u', '13800000005', 'rider2@blm.com', 'RIDER', 1);
+
+    INSERT INTO user_address (user_id, receiver, phone, province, city, district, detail_address, is_default) VALUES
+    (2, '张三', '13812345678', '北京市', '北京市', '海淀区', '中关村大街1号', 1),
+    (2, '李四', '13887654321', '上海市', '上海市', '浦东新区', '陆家嘴金融中心', 0);
+
+    INSERT INTO favorite (user_id, type, target_id) VALUES
+    (2, 'STORE', 1),
+    (2, 'FOOD', 1),
+    (2, 'FOOD', 2);
+
+    INSERT INTO history (user_id, type, target_id) VALUES
+    (2, 'STORE', 1),
+    (2, 'STORE', 2),
+    (2, 'FOOD', 1),
+    (2, 'FOOD', 2),
+    (2, 'FOOD', 3);
+
+    -- 商家服务表结构
+    USE store_db;
+
+    -- 店铺分类表
+    CREATE TABLE store_category (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        name VARCHAR(50) NOT NULL,
+        icon VARCHAR(255),
+        sort INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- 商家店铺表
+    CREATE TABLE store (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        merchant_id BIGINT NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        logo VARCHAR(255),
+        description TEXT,
+        phone VARCHAR(20) NOT NULL,
+        address VARCHAR(255) NOT NULL,
+        longitude DECIMAL(10,7) COMMENT '经度',
+        latitude DECIMAL(10,7) COMMENT '纬度',
+        business_hours VARCHAR(100) COMMENT '营业时间',
+        delivery_fee DECIMAL(10,2) DEFAULT 0,
+        min_order_amount DECIMAL(10,2) DEFAULT 0,
+        average_delivery_time INT COMMENT '平均配送时间(分钟)',
+        category_id BIGINT NOT NULL,
+        status VARCHAR(20) NOT NULL COMMENT '状态：PENDING/SUSPENDED/OPEN/CLOSED',
+        rating DECIMAL(2,1) DEFAULT 5.0,
+        monthly_sales INT DEFAULT 0 COMMENT '月销量',
+        license_img VARCHAR(255) COMMENT '营业执照图片',
+        permit_img VARCHAR(255) COMMENT '许可证图片',
+        reject_reason VARCHAR(255) COMMENT '拒绝原因',
+        is_featured TINYINT DEFAULT 0 COMMENT '是否推荐：0-否，1-是',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (category_id) REFERENCES store_category(id),
+        INDEX idx_merchant_id (merchant_id),
+        INDEX idx_location (longitude, latitude),
+        INDEX idx_rating (rating),
+        INDEX idx_sales (monthly_sales)
+    );
+
+    -- 商品分类表
+    CREATE TABLE food_category (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        store_id BIGINT NOT NULL,
+        name VARCHAR(50) NOT NULL,
+        sort INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (store_id) REFERENCES store(id) ON DELETE CASCADE,
+        INDEX idx_store_id (store_id)
+    );
+
+    -- 商品表
+    CREATE TABLE food (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        store_id BIGINT NOT NULL,
+        category_id BIGINT COMMENT '商品分类ID',
+        name VARCHAR(100) NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        original_price DECIMAL(10,2),
+        description TEXT,
+        image VARCHAR(255),
+        sales INT DEFAULT 0 COMMENT '销量',
+        stock INT DEFAULT 0 COMMENT '库存',
+        status VARCHAR(20) NOT NULL COMMENT '状态：OFF_SHELF/ON_SHELF/SUSPENDED/PENDING',
+        reject_reason VARCHAR(255) COMMENT '拒绝原因',
+        is_featured TINYINT DEFAULT 0 COMMENT '是否推荐：0-否，1-是',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (store_id) REFERENCES store(id) ON DELETE CASCADE,
+        FOREIGN KEY (category_id) REFERENCES food_category(id) ON DELETE SET NULL,
+        INDEX idx_store_id (store_id),
+        INDEX idx_category_id (category_id),
+        INDEX idx_status (status)
+    );
+
+    -- 促销活动表
+    CREATE TABLE promotion (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        store_id BIGINT NOT NULL,
         name VARCHAR(100) NOT NULL,
         description TEXT,
-        address VARCHAR(255) NOT NULL,
-        phone VARCHAR(20),
-        status TINYINT DEFAULT 1 COMMENT '0-关闭 1-营业',
-        rating DECIMAL(3,2) DEFAULT 5.0,
+        start_time TIMESTAMP NOT NULL,
+        end_time TIMESTAMP NOT NULL,
+        discount_type VARCHAR(20) NOT NULL COMMENT '折扣类型：PERCENT/AMOUNT/SPECIAL',
+        discount_value DECIMAL(10,2) NOT NULL COMMENT '折扣值',
+        min_order_amount DECIMAL(10,2) DEFAULT 0,
+        status TINYINT DEFAULT 1 COMMENT '状态：0-未开始，1-进行中，2-已结束',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        FOREIGN KEY (store_id) REFERENCES store(id) ON DELETE CASCADE,
+        INDEX idx_store_id (store_id),
+        INDEX idx_time (start_time, end_time)
     );
-    
-    -- 骑手表
-    CREATE TABLE IF NOT EXISTS riders (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(50) NOT NULL,
-        phone VARCHAR(20) UNIQUE NOT NULL,
-        status TINYINT DEFAULT 1 COMMENT '0-下线 1-在线',
-        location_lng DECIMAL(10,7),
-        location_lat DECIMAL(10,7),
+
+    -- 插入店铺分类测试数据
+    INSERT INTO store_category (name, icon, sort) VALUES
+    ('快餐简餐', '/icons/fast-food.png', 1),
+    ('中式料理', '/icons/chinese.png', 2),
+    ('西式料理', '/icons/western.png', 3),
+    ('日韩料理', '/icons/japanese.png', 4),
+    ('甜品饮品', '/icons/dessert.png', 5);
+
+    -- 插入店铺测试数据
+    INSERT INTO store (merchant_id, name, logo, description, phone, address, longitude, latitude, business_hours, delivery_fee, min_order_amount, category_id, status) VALUES
+    (3, '川味小厨', '/logos/store1.jpg', '正宗川菜，香辣美味', '010-12345678', '北京市朝阳区建国路88号', 116.4074, 39.9042, '09:00-22:00', 5.00, 20.00, 2, 'OPEN'),
+    (3, '汉堡王', '/logos/store2.jpg', '美味汉堡，快速送达', '010-87654321', '北京市海淀区中关村大街1号', 116.3112, 39.9991, '10:00-23:00', 3.00, 15.00, 1, 'OPEN');
+
+    -- 插入商品分类测试数据
+    INSERT INTO food_category (store_id, name, sort) VALUES
+    (1, '招牌菜', 1),
+    (1, '汤类', 2),
+    (1, '素食', 3),
+    (2, '汉堡类', 1),
+    (2, '小食', 2),
+    (2, '饮品', 3);
+
+    -- 插入商品测试数据
+    INSERT INTO food (store_id, category_id, name, price, original_price, description, image, stock, status) VALUES
+    (1, 1, '宫保鸡丁', 28.00, 32.00, '经典川菜，鸡肉嫩滑，花生酥脆', '/foods/gongbao.jpg', 100, 'ON_SHELF'),
+    (1, 1, '麻婆豆腐', 18.00, 20.00, '麻辣鲜香，嫩滑豆腐', '/foods/mapo.jpg', 80, 'ON_SHELF'),
+    (1, 2, '酸辣汤', 12.00, 15.00, '开胃酸辣汤', '/foods/soup.jpg', 50, 'ON_SHELF'),
+    (2, 1, '经典牛肉堡', 25.00, 28.00, '新鲜牛肉饼配新鲜蔬菜', '/foods/burger1.jpg', 200, 'ON_SHELF'),
+    (2, 1, '鸡肉汉堡', 22.00, 25.00, '香嫩鸡胸肉汉堡', '/foods/burger2.jpg', 150, 'ON_SHELF'),
+    (2, 3, '可口可乐', 8.00, 10.00, '经典可乐', '/foods/cola.jpg', 300, 'ON_SHELF');
+
+    -- 插入促销活动测试数据
+    INSERT INTO promotion (store_id, name, description, start_time, end_time, discount_type, discount_value, min_order_amount, status) VALUES
+    (1, '周末特惠', '周末全场8折', '2024-01-01 00:00:00', '2024-12-31 23:59:59', 'PERCENT', 0.80, 30.00, 1),
+    (2, '新用户优惠', '新用户立减10元', '2024-01-01 00:00:00', '2024-12-31 23:59:59', 'AMOUNT', 10.00, 25.00, 1);
+
+    -- 骑手信息表
+    CREATE TABLE rider (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        user_id BIGINT NOT NULL UNIQUE,
+        real_name VARCHAR(50) NOT NULL,
+        id_card VARCHAR(20) NOT NULL,
+        id_card_front VARCHAR(255) NOT NULL COMMENT '身份证正面照',
+        id_card_back VARCHAR(255) NOT NULL COMMENT '身份证背面照',
+        vehicle_type VARCHAR(20) NOT NULL COMMENT '交通工具类型：BIKE/ELECTRIC/MOTORCYCLE',
+        vehicle_number VARCHAR(20) COMMENT '车牌号',
+        status VARCHAR(20) NOT NULL COMMENT '工作状态: ONLINE/OFFLINE/SUSPENDED',
+        longitude DECIMAL(10,7) COMMENT '当前经度',
+        latitude DECIMAL(10,7) COMMENT '当前纬度',
+        location_updated_at TIMESTAMP COMMENT '位置更新时间',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_user_id (user_id),
+        INDEX idx_status (status),
+        INDEX idx_rider_location (longitude, latitude)
     );
-    
+
+    -- 骑手统计表
+    CREATE TABLE rider_stats (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        rider_id BIGINT NOT NULL,
+        date DATE NOT NULL,
+        orders_count INT DEFAULT 0 COMMENT '订单数',
+        completed_orders INT DEFAULT 0 COMMENT '完成订单数',
+        canceled_orders INT DEFAULT 0 COMMENT '取消订单数',
+        total_income DECIMAL(10,2) DEFAULT 0 COMMENT '总收入',
+        online_hours DECIMAL(5,2) DEFAULT 0 COMMENT '在线时长',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE,
+        UNIQUE KEY (rider_id, date),
+        INDEX idx_rider_id (rider_id),
+        INDEX idx_date (date)
+    );
+
+    -- 插入骑手测试数据
+    INSERT INTO rider (user_id, real_name, id_card, id_card_front, id_card_back, vehicle_type, vehicle_number, status, longitude, latitude) VALUES
+    (4, '李四', '123456789012345678', '/id_cards/front1.jpg', '/id_cards/back1.jpg', 'BIKE', '京A12345', 'ONLINE', 116.4074, 39.9042),
+    (5, '王五', '123456789012345679', '/id_cards/front2.jpg', '/id_cards/back2.jpg', 'BIKE', '京B67890', 'OFFLINE', 116.3112, 39.9991);
+
+    -- 插入骑手统计数据
+    INSERT INTO rider_stats (rider_id, date, orders_count, completed_orders, canceled_orders, total_income, online_hours) VALUES
+    (1, CURDATE(), 5, 4, 1, 25.50, 8.5),
+    (1, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 3, 3, 0, 18.75, 6.0),
+    (2, CURDATE(), 8, 7, 1, 42.30, 9.5),
+    (2, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 6, 5, 1, 31.20, 7.5);
+
+    -- 购物车表
+    CREATE TABLE cart (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        user_id BIGINT NOT NULL,
+        store_id BIGINT NOT NULL,
+        food_id BIGINT NOT NULL,
+        quantity INT NOT NULL DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_user_id (user_id),
+        INDEX idx_store_id (store_id),
+        INDEX idx_food_id (food_id),
+        UNIQUE KEY uk_user_store_food (user_id, store_id, food_id)
+    );
+
     -- 订单表
-    CREATE TABLE IF NOT EXISTS orders (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        order_no VARCHAR(32) UNIQUE NOT NULL,
+    CREATE TABLE orders (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        order_no VARCHAR(50) NOT NULL UNIQUE COMMENT '订单编号',
         user_id BIGINT NOT NULL,
         store_id BIGINT NOT NULL,
         rider_id BIGINT,
-        total_amount DECIMAL(10,2) NOT NULL,
-        status TINYINT DEFAULT 1 COMMENT '1-待付款 2-已付款 3-配送中 4-已完成 5-已取消',
-        delivery_address VARCHAR(255) NOT NULL,
+        address_id BIGINT NOT NULL,
+        total_amount DECIMAL(10,2) NOT NULL COMMENT '总金额',
+        delivery_fee DECIMAL(10,2) NOT NULL,
+        discount_amount DECIMAL(10,2) DEFAULT 0 COMMENT '优惠金额',
+        coupon_discount DECIMAL(10,2) DEFAULT 0 COMMENT '优惠券抵扣金额',
+        user_coupon_id BIGINT COMMENT '使用的优惠券ID',
+        payment_amount DECIMAL(10,2) NOT NULL COMMENT '支付金额',
+        payment_type VARCHAR(20) COMMENT '支付方式：ALIPAY/WECHAT/CASH',
+        status VARCHAR(20) NOT NULL COMMENT '订单状态：PENDING/ACCEPTED/COOKING/WAITING_RIDER/DELIVERING/COMPLETED/CANCELLED',
+        cancel_reason VARCHAR(255) COMMENT '取消原因',
+        dispatch_type VARCHAR(20) DEFAULT 'SMART' COMMENT '派单类型：SMART-智能派单，GRAB-抢单',
+        remark VARCHAR(255) COMMENT '备注',
+        expected_time TIMESTAMP COMMENT '预计送达时间',
+        actual_time TIMESTAMP COMMENT '实际送达时间',
+        urge_count INT DEFAULT 0 COMMENT '催单次数',
+        urge_time TIMESTAMP COMMENT '最后催单时间',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_user_id (user_id),
+        INDEX idx_store_id (store_id),
+        INDEX idx_rider_id (rider_id),
+        INDEX idx_status (status),
+        INDEX idx_created_at (created_at)
     );
+
+    -- 订单明细表
+    CREATE TABLE order_detail (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        order_id BIGINT NOT NULL,
+        food_id BIGINT NOT NULL,
+        food_name VARCHAR(100) NOT NULL,
+        food_image VARCHAR(255),
+        price DECIMAL(10,2) NOT NULL,
+        quantity INT NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+        INDEX idx_order_id (order_id),
+        INDEX idx_food_id (food_id)
+    );
+
+    -- 订单项表（为了保持与原始结构兼容，可以与order_detail合并使用）
+    CREATE TABLE order_item (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        order_id BIGINT NOT NULL,
+        food_id BIGINT NOT NULL,
+        food_name VARCHAR(100) NOT NULL,
+        food_image VARCHAR(255),
+        price DECIMAL(10,2) NOT NULL,
+        quantity INT NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+        INDEX idx_order_id (order_id),
+        INDEX idx_food_id (food_id)
+    );
+
+    -- 优惠券表
+    CREATE TABLE coupon (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        name VARCHAR(100) NOT NULL,
+        description TEXT COMMENT '优惠券描述',
+        type VARCHAR(20) NOT NULL COMMENT '优惠券类型：DISCOUNT/FIXED/DELIVERY',
+        value DECIMAL(10,2) NOT NULL COMMENT '优惠券面值',
+        min_order_amount DECIMAL(10,2) DEFAULT 0 COMMENT '最低使用金额',
+        start_time TIMESTAMP NOT NULL COMMENT '生效时间',
+        end_time TIMESTAMP NOT NULL COMMENT '过期时间',
+        store_id BIGINT COMMENT '指定店铺ID，NULL表示全平台',
+        status TINYINT DEFAULT 1 COMMENT '状态：0-无效，1-有效',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_store_id (store_id),
+        INDEX idx_time (start_time, end_time)
+    );
+
+    -- 用户优惠券表
+    CREATE TABLE user_coupon (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        user_id BIGINT NOT NULL,
+        coupon_id BIGINT NOT NULL,
+        status TINYINT DEFAULT 0 COMMENT '状态：0-未使用，1-已使用，2-已过期',
+        used_time TIMESTAMP COMMENT '使用时间',
+        order_id BIGINT COMMENT '使用订单',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (coupon_id) REFERENCES coupon(id) ON DELETE CASCADE,
+        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
+        INDEX idx_user_id (user_id),
+        INDEX idx_coupon_id (coupon_id),
+        INDEX idx_status (status)
+    );
+
+    -- 订单跟踪表
+    CREATE TABLE order_tracking (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        order_id BIGINT NOT NULL,
+        status VARCHAR(50) NOT NULL COMMENT '状态：ORDER_CREATED/PAYMENT_CONFIRMED/MERCHANT_CONFIRMED/COOKING/RIDER_ASSIGNED/FOOD_PICKED/DELIVERING/COMPLETED',
+        operator_id BIGINT COMMENT '操作人ID',
+        operator_type VARCHAR(20) COMMENT '操作人类型：SYSTEM/USER/MERCHANT/RIDER',
+        remark VARCHAR(255) COMMENT '备注',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+        INDEX idx_order_id (order_id),
+        INDEX idx_status (status)
+    );
+
+    -- 评价表
+    CREATE TABLE review (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        parent_id BIGINT COMMENT '父级评论ID',
+        order_id BIGINT NOT NULL UNIQUE,
+        user_id BIGINT NOT NULL,
+        store_id BIGINT NOT NULL,
+        rider_id BIGINT COMMENT '骑手ID',
+        store_rating TINYINT NOT NULL COMMENT '店铺评分：1-5',
+        rider_rating TINYINT COMMENT '骑手评分：1-5',
+        content TEXT,
+        images VARCHAR(1000) COMMENT '图片，多个逗号分隔',
+        reply TEXT COMMENT '商家回复',
+        reply_time TIMESTAMP COMMENT '商家回复时间',
+        is_anonymous TINYINT DEFAULT 0 COMMENT '是否匿名：0-否，1-是',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+        FOREIGN KEY (parent_id) REFERENCES review(id) ON DELETE CASCADE,
+        INDEX idx_order_id (order_id),
+        INDEX idx_user_id (user_id),
+        INDEX idx_store_id (store_id),
+        INDEX idx_rider_id (rider_id)
+    );
+
+    -- 插入测试数据
+    -- 购物车测试数据
+    INSERT INTO cart (user_id, store_id, food_id, quantity) VALUES
+    (2, 1, 1, 2),
+    (2, 1, 2, 1),
+    (2, 2, 4, 1);
+
+    -- 订单测试数据
+    INSERT INTO orders (order_no, user_id, store_id, rider_id, address_id, total_amount, delivery_fee, discount_amount, payment_amount, payment_type, status, expected_time) VALUES
+    ('ORD20240829001', 2, 1, 1, 1, 58.00, 5.00, 0.00, 63.00, 'ALIPAY', 'COMPLETED', '2024-08-29 13:30:00'),
+    ('ORD20240829002', 2, 2, 2, 1, 25.00, 3.00, 0.00, 28.00, 'WECHAT', 'DELIVERING', '2024-08-29 14:30:00');
+
+    -- 订单明细测试数据
+    INSERT INTO order_detail (order_id, food_id, food_name, food_image, price, quantity, amount) VALUES
+    (1, 1, '宫保鸡丁', '/foods/gongbao.jpg', 28.00, 2, 56.00),
+    (1, 2, '麻婆豆腐', '/foods/mapo.jpg', 18.00, 1, 18.00),
+    (2, 4, '经典牛肉堡', '/foods/burger1.jpg', 25.00, 1, 25.00);
+
+    -- 订单项测试数据 (与order_detail相同的数据，保持兼容性)
+    INSERT INTO order_item (order_id, food_id, food_name, food_image, price, quantity, amount) VALUES
+    (1, 1, '宫保鸡丁', '/foods/gongbao.jpg', 28.00, 2, 56.00),
+    (1, 2, '麻婆豆腐', '/foods/mapo.jpg', 18.00, 1, 18.00),
+    (2, 4, '经典牛肉堡', '/foods/burger1.jpg', 25.00, 1, 25.00);
+
+    -- 优惠券测试数据
+    INSERT INTO coupon (name, description, type, value, min_order_amount, start_time, end_time, store_id, status) VALUES
+    ('新用户专享', '新用户首单立减10元', 'FIXED', 10.00, 20.00, '2024-01-01 00:00:00', '2024-12-31 23:59:59', NULL, 1),
+    ('川味小厨专用券', '川味小厨8折优惠', 'DISCOUNT', 0.80, 30.00, '2024-08-01 00:00:00', '2024-12-31 23:59:59', 1, 1),
+    ('免配送费券', '全平台免配送费', 'DELIVERY', 0.00, 15.00, '2024-01-01 00:00:00', '2024-12-31 23:59:59', NULL, 1);
+
+    -- 用户优惠券测试数据
+    INSERT INTO user_coupon (user_id, coupon_id, status, used_time, order_id) VALUES
+    (2, 1, 1, '2024-08-29 12:30:00', 1),
+    (2, 2, 0, NULL, NULL),
+    (2, 3, 0, NULL, NULL);
+
+    -- 订单跟踪测试数据
+    INSERT INTO order_tracking (order_id, status, operator_id, operator_type, remark) VALUES
+    (1, 'ORDER_CREATED', 2, 'USER', '用户下单'),
+    (1, 'PAYMENT_CONFIRMED', NULL, 'SYSTEM', '支付确认'),
+    (1, 'MERCHANT_CONFIRMED', 3, 'MERCHANT', '商家接单'),
+    (1, 'COOKING', 3, 'MERCHANT', '开始制作'),
+    (1, 'RIDER_ASSIGNED', NULL, 'SYSTEM', '骑手分配'),
+    (1, 'FOOD_PICKED', 4, 'RIDER', '骑手取餐'),
+    (1, 'DELIVERING', 4, 'RIDER', '配送中'),
+    (1, 'COMPLETED', 4, 'RIDER', '配送完成'),
+    (2, 'ORDER_CREATED', 2, 'USER', '用户下单'),
+    (2, 'PAYMENT_CONFIRMED', NULL, 'SYSTEM', '支付确认'),
+    (2, 'MERCHANT_CONFIRMED', 3, 'MERCHANT', '商家接单'),
+    (2, 'COOKING', 3, 'MERCHANT', '制作中'),
+    (2, 'RIDER_ASSIGNED', NULL, 'SYSTEM', '骑手分配'),
+    (2, 'FOOD_PICKED', 5, 'RIDER', '骑手取餐'),
+    (2, 'DELIVERING', 5, 'RIDER', '配送中');
+
+    -- 评价测试数据
+    INSERT INTO review (order_id, user_id, store_id, rider_id, store_rating, rider_rating, content, is_anonymous) VALUES
+    (1, 2, 1, 4, 5, 5, '菜品很好吃，配送也很快！', 0);
+
 
 ---
 apiVersion: v1

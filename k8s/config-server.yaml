@@ -19,7 +19,7 @@ spec:
       - name: config-server
         image: ghcr.io/cheuring/blm/config-server:latest
         ports:
-        - containerPort: 8088
+        - containerPort: 8888
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "k8s"
@@ -28,13 +28,13 @@ spec:
         livenessProbe:
           httpGet:
             path: /actuator/health
-            port: 8088
+            port: 8888
           initialDelaySeconds: 60
           periodSeconds: 30
         readinessProbe:
           httpGet:
             path: /actuator/health
-            port: 8088
+            port: 8888
           initialDelaySeconds: 30
           periodSeconds: 10
         resources:
@@ -55,6 +55,6 @@ spec:
   selector:
     app: config-server
   ports:
-  - port: 8088
-    targetPort: 8088
+  - port: 8888
+    targetPort: 8888
   type: ClusterIP

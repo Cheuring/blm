@@ -161,8 +161,8 @@ jobs:
         
         # 等待 Eureka Server 启动完成
         echo "⏳ Waiting for Eureka Server to be ready..."
-        kubectl rollout status deployment/eureka-server -n blm-microservices --timeout=300s
-        kubectl wait --for=condition=ready pod -l app=eureka-server -n blm-microservices --timeout=300s
+        kubectl rollout status deployment/eureka-server -n blm-microservices --timeout=600s
+        kubectl wait --for=condition=ready pod -l app=eureka-server -n blm-microservices --timeout=600s
 
         # 第二阶段：部署 Config Server
         echo "🚀 Phase 2: Deploying Config Server..."
@@ -171,8 +171,8 @@ jobs:
         
         # 等待 Config Server 启动完成
         echo "⏳ Waiting for Config Server to be ready..."
-        kubectl rollout status deployment/config-server -n blm-microservices --timeout=300s
-        kubectl wait --for=condition=ready pod -l app=config-server -n blm-microservices --timeout=300s
+        kubectl rollout status deployment/config-server -n blm-microservices --timeout=600s
+        kubectl wait --for=condition=ready pod -l app=config-server -n blm-microservices --timeout=600s
 
         # 第三阶段：部署其他微服务
         echo "🚀 Phase 3: Deploying other microservices..."
@@ -202,14 +202,14 @@ jobs:
         
         # 等待所有微服务部署完成
         echo "⏳ Waiting for all services to be ready..."
-        kubectl rollout status deployment/api-gateway -n blm-microservices --timeout=300s
-        kubectl rollout status deployment/auth-center -n blm-microservices --timeout=300s
-        kubectl rollout status deployment/user-service -n blm-microservices --timeout=300s
-        kubectl rollout status deployment/order-service -n blm-microservices --timeout=300s
-        kubectl rollout status deployment/store-service -n blm-microservices --timeout=300s
-        kubectl rollout status deployment/rider-service -n blm-microservices --timeout=300s
-        kubectl rollout status deployment/admin-service -n blm-microservices --timeout=300s
-        kubectl rollout status deployment/file-service -n blm-microservices --timeout=300s
+        kubectl rollout status deployment/api-gateway -n blm-microservices --timeout=600s
+        kubectl rollout status deployment/auth-center -n blm-microservices --timeout=600s
+        kubectl rollout status deployment/user-service -n blm-microservices --timeout=600s
+        kubectl rollout status deployment/order-service -n blm-microservices --timeout=600s
+        kubectl rollout status deployment/store-service -n blm-microservices --timeout=600s
+        kubectl rollout status deployment/rider-service -n blm-microservices --timeout=600s
+        kubectl rollout status deployment/admin-service -n blm-microservices --timeout=600s
+        kubectl rollout status deployment/file-service -n blm-microservices --timeout=600s
         
         # 显示所有部署状态
         echo "📊 Deployment Status:"

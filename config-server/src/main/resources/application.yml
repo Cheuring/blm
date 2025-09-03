@@ -1,5 +1,5 @@
 server:
-  port: 8888
+  port: 8088
 
 spring:
   application:
@@ -10,8 +10,9 @@ spring:
     config:
       server:
         bootstrap: true
-        native:
-          search-locations: classpath:/config-repo/,classpath:/config-repo/{profile}/
+        composite:
+          - type: native
+            search-locations: classpath:/config-repo/,classpath:/config-repo/{profile}/
         # 支持多环境配置
         default-label: master
         # 启用配置文件的环境感知

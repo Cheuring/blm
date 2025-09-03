@@ -132,17 +132,61 @@ jobs:
     - name: Deploy to Local Kubernetes
       run: |
         echo "Deploying to local Kubernetes cluster..."
+
+        # 创建或更新 GitHub Registry Secret
+        echo "Creating/updating GitHub Container Registry secret..."
+        kubectl delete secret github-registry-secret -n blm-microservices --ignore-not-found=true
+
+        # 验证凭据是否有效
+        echo "Validating Docker credentials..."
+        kubectl create secret docker-registry github-registry-secret \
+          --docker-server=ghcr.io \
+          --docker-username=${{ github.actor }} \
+          --docker-password=${{ secrets.GHCR_TOKEN }} \
+          --namespace=blm-microservices
         
-        # 应用 Kubernetes 配置
-        kubectl apply -f k8s/
+        # 应用基础设施配置（命名空间、数据库等）
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/mysql-deployment.yaml
+        kubectl apply -f k8s/mysql.yaml
+        kubectl apply -f k8s/redis-deployment.yaml
         
-        # 更新镜像标签 - 使用分支名作为标签
+        # 更新镜像标签
         TAG="latest"
         
-        echo "Updating images with tag: $TAG"
-        
+        # 第一阶段：部署 Eureka Server
+        echo "🚀 Phase 1: Deploying Eureka Server..."
+        kubectl apply -f k8s/eureka-server.yaml
         kubectl set image deployment/eureka-server eureka-server=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/eureka-server:$TAG -n blm-microservices
+        
+        # 等待 Eureka Server 启动完成
+        echo "⏳ Waiting for Eureka Server to be ready..."
+        kubectl rollout status deployment/eureka-server -n blm-microservices --timeout=300s
+        kubectl wait --for=condition=ready pod -l app=eureka-server -n blm-microservices --timeout=300s
+        
+        # 第二阶段：部署 Config Server
+        echo "🚀 Phase 2: Deploying Config Server..."
+        kubectl apply -f k8s/config-server.yaml
         kubectl set image deployment/config-server config-server=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/config-server:$TAG -n blm-microservices
+        
+        # 等待 Config Server 启动完成
+        echo "⏳ Waiting for Config Server to be ready..."
+        kubectl rollout status deployment/config-server -n blm-microservices --timeout=300s
+        kubectl wait --for=condition=ready pod -l app=config-server -n blm-microservices --timeout=300s
+        
+        # 第三阶段：部署其他微服务
+        echo "🚀 Phase 3: Deploying other microservices..."
+        kubectl apply -f k8s/api-gateway.yaml
+        kubectl apply -f k8s/auth-center.yaml
+        kubectl apply -f k8s/user-service.yaml
+        kubectl apply -f k8s/order-service.yaml
+        kubectl apply -f k8s/store-service.yaml
+        kubectl apply -f k8s/rider-service.yaml
+        kubectl apply -f k8s/admin-service.yaml
+        kubectl apply -f k8s/file-service.yaml
+        
+        # 更新其他服务的镜像
+        echo "📦 Updating images for other services..."
         kubectl set image deployment/api-gateway api-gateway=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/api-gateway:$TAG -n blm-microservices
         kubectl set image deployment/auth-center auth-center=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/auth-center:$TAG -n blm-microservices
         kubectl set image deployment/user-service user-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/user-service:$TAG -n blm-microservices
@@ -156,16 +200,31 @@ jobs:
       run: |
         echo "Verifying deployment status..."
         
-        # 等待部署完成
-        kubectl rollout status deployment/eureka-server -n blm-microservices --timeout=300s
+        # 等待所有微服务部署完成
+        echo "⏳ Waiting for all services to be ready..."
         kubectl rollout status deployment/api-gateway -n blm-microservices --timeout=300s
+        kubectl rollout status deployment/auth-center -n blm-microservices --timeout=300s
+        kubectl rollout status deployment/user-service -n blm-microservices --timeout=300s
+        kubectl rollout status deployment/order-service -n blm-microservices --timeout=300s
+        kubectl rollout status deployment/store-service -n blm-microservices --timeout=300s
+        kubectl rollout status deployment/rider-service -n blm-microservices --timeout=300s
+        kubectl rollout status deployment/admin-service -n blm-microservices --timeout=300s
+        kubectl rollout status deployment/file-service -n blm-microservices --timeout=300s
         
         # 显示所有部署状态
+        echo "📊 Deployment Status:"
         kubectl get deployments -n blm-microservices
+        
+        echo "📋 Pod Status:"
         kubectl get pods -n blm-microservices
         
         # 显示服务状态
+        echo "🔌 Service Status:"
         kubectl get services -n blm-microservices
+        
+        # 检查服务健康状态
+        echo "💚 Health Check:"
+        kubectl get pods -n blm-microservices -o wide
 
   # notify:
   #   needs: [test, build-and-push, deploy-to-k8s]
@@ -176,8 +235,27 @@ jobs:
   #   - name: Notify deployment status
   #     if: always()
   #     run: |
-  #       if [ "${{ needs.deploy-to-k8s.result }}" == "success" ]; then
-  #         echo "✅ Deployment successful!"
+  #       echo "==================================================="
+  #       echo "           BLM 微服务部署状态报告"
+  #       echo "==================================================="
+  #       echo "🧪 测试结果: ${{ needs.test.result }}"
+  #       echo "🏗️ 构建结果: ${{ needs.build-and-push.result }}"
+  #       echo "🚀 部署结果: ${{ needs.deploy-to-k8s.result }}"
+  #       echo "==================================================="
+        
+  #       if [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.build-and-push.result }}" == "success" ] && [ "${{ needs.deploy-to-k8s.result }}" == "success" ]; then
+  #         echo "✅ 所有阶段执行成功！微服务已按正确顺序部署："
+  #         echo "   1️⃣ Eureka Server (服务注册中心)"
+  #         echo "   2️⃣ Config Server (配置中心)"
+  #         echo "   3️⃣ 其他业务微服务"
+  #         echo "🎉 BLM 微服务平台部署完成！"
+  #       elif [ "${{ needs.deploy-to-k8s.result }}" == "failure" ]; then
+  #         echo "❌ 部署失败！请检查 Kubernetes 集群状态和微服务配置"
+  #       elif [ "${{ needs.build-and-push.result }}" == "failure" ]; then
+  #         echo "❌ 构建或推送镜像失败！请检查代码和 Docker 配置"
+  #       elif [ "${{ needs.test.result }}" == "failure" ]; then
+  #         echo "❌ 测试失败！请修复测试问题后重新提交"
   #       else
-  #         echo "❌ Deployment failed!"
+  #         echo "⚠️ 部分阶段未成功执行，请检查具体日志"
   #       fi
+  #       echo "==================================================="

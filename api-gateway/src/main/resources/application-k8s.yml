@@ -28,34 +28,35 @@ spring:
           filters:
             - StripPrefix=0
 
-        # 订单服务路由
-        - id: order-service
-          uri: lb://order-service
-          predicates:
-            - Path=/api/orders/**
-          filters:
-            - StripPrefix=0
-
-        # 商店服务路由
+        # 商家服务路由（预留）
         - id: store-service
           uri: lb://store-service
           predicates:
             - Path=/api/stores/**
+            - Path=/api/merchant/**
             - Path=/api/categories/**
-            - Path=/api/dishes/**
+            - Path=/api/foods/**
           filters:
             - StripPrefix=0
 
-        # 骑手服务路由
+        # 订单服务路由（预留）
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+            - Path=/api/cart/**
+          filters:
+            - StripPrefix=0
+
+        # 骑手服务路由（预留）
         - id: rider-service
           uri: lb://rider-service
           predicates:
-            - Path=/api/riders/**
-            - Path=/api/delivery/**
+            - Path=/api/rider/**
           filters:
             - StripPrefix=0
 
-        # 管理服务路由
+        # 管理后台路由（预留）
         - id: admin-service
           uri: lb://admin-service
           predicates:
@@ -63,13 +64,23 @@ spring:
           filters:
             - StripPrefix=0
 
-        # 文件服务路由
         - id: file-service
           uri: lb://file-service
           predicates:
             - Path=/api/files/**
           filters:
             - StripPrefix=0
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+  main:
+    web-application-type: reactive
 
 eureka:
   client:

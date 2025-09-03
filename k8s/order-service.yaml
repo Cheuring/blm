@@ -4,7 +4,7 @@ metadata:
   name: order-service
   namespace: blm-microservices
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: order-service
@@ -55,10 +55,10 @@ spec:
           periodSeconds: 10
         resources:
           requests:
-            memory: "256Mi"
+            memory: "512Mi"
             cpu: "250m"
           limits:
-            memory: "512Mi"
+            memory: "1Gi"
             cpu: "500m"
 
 ---

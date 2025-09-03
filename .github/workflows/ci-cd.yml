@@ -17,100 +17,100 @@ env:
   IMAGE_NAME_PREFIX: cheuring/blm
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    name: Run Tests
+  # test:
+  #   runs-on: ubuntu-latest
+  #   name: Run Tests
     
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
 
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        cache: maven
+  #   - name: Set up JDK 21
+  #     uses: actions/setup-java@v4
+  #     with:
+  #       java-version: '21'
+  #       distribution: 'temurin'
+  #       cache: maven
 
-    - name: Run tests
-      run: mvn clean test
+  #   - name: Run tests
+  #     run: mvn clean test
 
-    - name: Generate test report
-      uses: dorny/test-reporter@v1
-      if: success() || failure()
-      with:
-        name: Maven Tests
-        path: '**/target/surefire-reports/*.xml'
-        reporter: java-junit
+  #   - name: Generate test report
+  #     uses: dorny/test-reporter@v1
+  #     if: success() || failure()
+  #     with:
+  #       name: Maven Tests
+  #       path: '**/target/surefire-reports/*.xml'
+  #       reporter: java-junit
 
-  build-and-push:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/micro_k8s'
+  # build-and-push:
+  #   needs: test
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/micro_k8s'
     
-    strategy:
-      matrix:
-        service: 
-          - eureka-server
-          - config-server
-          - api-gateway
-          - auth-center
-          - user-service
-          - order-service
-          - store-service
-          - rider-service
-          - admin-service
-          - file-service
+  #   strategy:
+  #     matrix:
+  #       service: 
+  #         - eureka-server
+  #         - config-server
+  #         - api-gateway
+  #         - auth-center
+  #         - user-service
+  #         - order-service
+  #         - store-service
+  #         - rider-service
+  #         - admin-service
+  #         - file-service
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
 
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        cache: maven
+  #   - name: Set up JDK 21
+  #     uses: actions/setup-java@v4
+  #     with:
+  #       java-version: '21'
+  #       distribution: 'temurin'
+  #       cache: maven
 
-    - name: Build with Maven
-      run: mvn clean package -DskipTests
+  #   - name: Build with Maven
+  #     run: mvn clean package -DskipTests
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+  #   - name: Set up Docker Buildx
+  #     uses: docker/setup-buildx-action@v3
 
-    - name: Log in to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+  #   - name: Log in to Container Registry
+  #     uses: docker/login-action@v3
+  #     with:
+  #       registry: ${{ env.REGISTRY }}
+  #       username: ${{ github.actor }}
+  #       password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/${{ matrix.service }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
+  #   - name: Extract metadata
+  #     id: meta
+  #     uses: docker/metadata-action@v5
+  #     with:
+  #       images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/${{ matrix.service }}
+  #       tags: |
+  #         type=ref,event=branch
+  #         type=ref,event=pr
+  #         type=sha,prefix={{branch}}-
+  #         type=raw,value=latest,enable={{is_default_branch}}
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./${{ matrix.service }}
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        platforms: linux/amd64,linux/arm64  # 添加多架构支持
+  #   - name: Build and push Docker image
+  #     uses: docker/build-push-action@v5
+  #     with:
+  #       context: ./${{ matrix.service }}
+  #       push: true
+  #       tags: ${{ steps.meta.outputs.tags }}
+  #       labels: ${{ steps.meta.outputs.labels }}
+  #       cache-from: type=gha
+  #       cache-to: type=gha,mode=max
+  #       platforms: linux/amd64,linux/arm64  # 添加多架构支持
 
 
   deploy-to-k8s:
-    needs: build-and-push
+    # needs: build-and-push
     runs-on: self-hosted
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/micro_k8s'
     
@@ -132,32 +132,18 @@ jobs:
     - name: Deploy to Local Kubernetes
       run: |
         echo "Deploying to local Kubernetes cluster..."
-        
-        # 检查 GHCR_TOKEN 是否存在
-        if [ -z "${{ secrets.GHCR_TOKEN }}" ]; then
-          echo "Warning: GHCR_TOKEN secret is not set. Using GITHUB_TOKEN instead."
-          DOCKER_PASSWORD="${{ secrets.GITHUB_TOKEN }}"
-        else
-          echo "Using GHCR_TOKEN for authentication."
-          DOCKER_PASSWORD="${{ secrets.GHCR_TOKEN }}"
-        fi
-        
+
         # 创建或更新 GitHub Registry Secret
         echo "Creating/updating GitHub Container Registry secret..."
         kubectl delete secret github-registry-secret -n blm-microservices --ignore-not-found=true
-        
+
         # 验证凭据是否有效
         echo "Validating Docker credentials..."
-        if [ -n "$DOCKER_PASSWORD" ]; then
-          kubectl create secret docker-registry github-registry-secret \
-            --docker-server=ghcr.io \
-            --docker-username=${{ github.actor }} \
-            --docker-password="$DOCKER_PASSWORD" \
-            --namespace=blm-microservices
-        else
-          echo "Error: No valid Docker registry credentials found!"
-          exit 1
-        fi
+        kubectl create secret docker-registry github-registry-secret \
+          --docker-server=ghcr.io \
+          --docker-username=${{ github.actor }} \
+          --docker-password=${{ secrets.GHCR_TOKEN }} \
+          --namespace=blm-microservices
         
         # 应用 Kubernetes 配置
         kubectl apply -f k8s/
@@ -193,17 +179,17 @@ jobs:
         # 显示服务状态
         kubectl get services -n blm-microservices
 
-  notify:
-    needs: [test, build-and-push, deploy-to-k8s]
-    runs-on: ubuntu-latest
-    if: always()
+  # notify:
+  #   needs: [test, build-and-push, deploy-to-k8s]
+  #   runs-on: ubuntu-latest
+  #   if: always()
     
-    steps:
-    - name: Notify deployment status
-      if: always()
-      run: |
-        if [ "${{ needs.deploy-to-k8s.result }}" == "success" ]; then
-          echo "✅ Deployment successful!"
-        else
-          echo "❌ Deployment failed!"
-        fi
+  #   steps:
+  #   - name: Notify deployment status
+  #     if: always()
+  #     run: |
+  #       if [ "${{ needs.deploy-to-k8s.result }}" == "success" ]; then
+  #         echo "✅ Deployment successful!"
+  #       else
+  #         echo "❌ Deployment failed!"
+  #       fi

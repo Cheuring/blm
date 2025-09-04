@@ -52,8 +52,8 @@ jobs:
       matrix:
         service: 
           # - eureka-server
-          - config-server
-          # - api-gateway
+          # - config-server
+          - api-gateway
           # - auth-center
           # - user-service
           # - order-service
@@ -149,7 +149,7 @@ jobs:
         kubectl apply -f k8s/namespace.yaml
         kubectl apply -f k8s/mysql-deployment.yaml
         kubectl apply -f k8s/mysql.yaml
-        kubectl apply -f k8s/redis-deployment.yaml
+        # kubectl apply -f k8s/redis-deployment.yaml
         
         # 更新镜像标签
         TAG="latest"
@@ -165,14 +165,14 @@ jobs:
         kubectl wait --for=condition=ready pod -l app=eureka-server -n blm-microservices --timeout=600s
 
         # 第二阶段：部署 Config Server
-        echo "🚀 Phase 2: Deploying Config Server..."
-        kubectl apply -f k8s/config-server.yaml
-        kubectl set image deployment/config-server config-server=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/config-server:$TAG -n blm-microservices
+        # echo "🚀 Phase 2: Deploying Config Server..."
+        # kubectl apply -f k8s/config-server.yaml
+        # kubectl set image deployment/config-server config-server=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/config-server:$TAG -n blm-microservices
         
-        # 等待 Config Server 启动完成
-        echo "⏳ Waiting for Config Server to be ready..."
-        kubectl rollout status deployment/config-server -n blm-microservices --timeout=600s
-        kubectl wait --for=condition=ready pod -l app=config-server -n blm-microservices --timeout=600s
+        # # 等待 Config Server 启动完成
+        # echo "⏳ Waiting for Config Server to be ready..."
+        # kubectl rollout status deployment/config-server -n blm-microservices --timeout=600s
+        # kubectl wait --for=condition=ready pod -l app=config-server -n blm-microservices --timeout=600s
 
         # 第三阶段：部署其他微服务
         echo "🚀 Phase 3: Deploying other microservices..."

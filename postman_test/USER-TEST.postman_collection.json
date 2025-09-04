@@ -1,0 +1,577 @@
+{
+	"info": {
+		"_postman_id": "da26c9c5-1614-4ed5-92f0-5cedfe2523e6",
+		"name": "USER-TEST",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38669901"
+	},
+	"item": [
+		{
+			"name": "用户注册",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// 生成唯一的用户名和手机号\r",
+							"const randomSuffix = Math.floor(Math.random() * 10000);\r",
+							"pm.environment.set('password', '123456');\r",
+							"pm.environment.set('username', 'testuser' + randomSuffix);\r",
+							"pm.environment.set('phone', '138' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0'));\r",
+							"pm.environment.set('email', `test${randomSuffix}@example.com`);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has user data\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('data');\r",
+							"    pm.expect(jsonData.data).to.have.property('id');\r",
+							"    pm.expect(jsonData.data).to.have.property('username');\r",
+							"    \r",
+							"    // 保存用户ID\r",
+							"    pm.environment.set('userId', jsonData.data.id);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"User role is RIDER\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.data.role).to.eql('RIDER'); \r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"password\": \"{{password}}\",\n  \"phone\": \"{{phone}}\",\n  \"username\": \"{{username}}\",\n  \"email\": \"{{email}}\",\n  \"role\": \"RIDER\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/register",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"register"
+					]
+				},
+				"description": "根据提供的用户信息创建新用户账号"
+			},
+			"response": [
+				{
+					"name": "注册成功",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"pifGqLj2NnqylK^u@)\",\n  \"phone\": \"string\",\n  \"username\": \"string\",\n  \"email\": \"string\",\n  \"role\": \"USER\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1754,\n  \"username\": \"string\",\n  \"phone\": \"string\",\n  \"email\": \"string\",\n  \"avatar\": \"string\",\n  \"role\": \"USER\",\n  \"status\": 3329,\n  \"createdAt\": \"2013-05-12T17:34:20.787Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "用户登录",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has token\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('data');\r",
+							"    pm.expect(jsonData.data).to.have.property('token');\r",
+							"    \r",
+							"    // 保存token到环境变量\r",
+							"    pm.environment.set('bearerToken', jsonData.data.token);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has user info\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.data).to.have.property('userInfo');\r",
+							"    pm.expect(jsonData.data.userInfo).to.have.property('id');\r",
+							"    \r",
+							"    // 更新用户ID\r",
+							"    pm.environment.set('userId', jsonData.data.userInfo.id);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"packages": {},
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"password\": \"{{password}}\",\n  \"username\": \"{{username}}\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				},
+				"description": "使用用户名和密码进行登录，成功后返回Token和用户信息"
+			},
+			"response": [
+				{
+					"name": "登录成功",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"password123\",\n  \"username\": \"testuser\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"token\": \"string\",\n  \"userInfo\": {\n    \"id\": 4429,\n    \"username\": \"string\",\n    \"phone\": \"string\",\n    \"email\": \"string\",\n    \"avatar\": \"string\",\n    \"role\": \"USER\",\n    \"status\": 1588,\n    \"createdAt\": \"1980-10-26T09:42:36.238Z\"\n  }\n}"
+				}
+			]
+		},
+		{
+			"name": "获取当前用户个人资料",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/users/profile",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"profile"
+					]
+				},
+				"description": "获取当前登录用户的详细信息"
+			},
+			"response": [
+				{
+					"name": "获取成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"profile"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1754,\n  \"username\": \"string\",\n  \"phone\": \"string\",\n  \"email\": \"string\",\n  \"avatar\": \"string\",\n  \"role\": \"USER\",\n  \"status\": 3329,\n  \"createdAt\": \"2013-05-12T17:34:20.787Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "更新当前用户个人资料",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// 生成新的用户信息\r",
+							"const randomSuffix = Math.floor(Math.random() * 10000);\r",
+							"\r",
+							"pm.environment.set(\"email\",`updated${randomSuffix}@example.com`)\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Profile updated successfully\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('data');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{email}}\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/users/profile",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"profile"
+					]
+				},
+				"description": "更新当前登录用户的用户名、邮箱或头像"
+			},
+			"response": [
+				{
+					"name": "更新成功",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"string\",\n  \"email\": \"string\",\n  \"avatar\": \"string\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"profile"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1754,\n  \"username\": \"string\",\n  \"phone\": \"string\",\n  \"email\": \"string\",\n  \"avatar\": \"string\",\n  \"role\": \"USER\",\n  \"status\": 3329,\n  \"createdAt\": \"2013-05-12T17:34:20.787Z\"\n}"
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"// Collection Pre-request Script\r",
+					"// 设置默认headers\r",
+					"pm.request.headers.add({\r",
+					"    key: 'Content-Type',\r",
+					"    value: 'application/json'\r",
+					"});\r",
+					"\r",
+					"// 如果有token，自动添加Authorization header\r",
+					"const token = pm.environment.get('token');\r",
+					"if (token && token !== '') {\r",
+					"    pm.request.headers.add({\r",
+					"        key: 'Authorization',\r",
+					"        value: `Bearer ${token}`\r",
+					"    });\r",
+					"}\r",
+					"\r",
+					"// 通用函数：生成随机字符串\r",
+					"pm.globals.set('generateRandomString', function(length = 8) {\r",
+					"    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
+					"    let result = '';\r",
+					"    for (let i = 0; i < length; i++) {\r",
+					"        result += chars.charAt(Math.floor(Math.random() * chars.length));\r",
+					"    }\r",
+					"    return result;\r",
+					"});\r",
+					"\r",
+					"// 通用函数：生成随机手机号\r",
+					"pm.globals.set('generateRandomPhone', function() {\r",
+					"    return '138' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0');\r",
+					"});\r",
+					"\r",
+					"// 设置测试数据\r",
+					"pm.globals.set(\"testStoreId\", \"1\");\r",
+					"pm.globals.set(\"testFoodId\", \"1\");\r",
+					"pm.globals.set(\"testPromotionId\", \"1\");\r",
+					"pm.globals.set(\"testCategoryId\", \"1\");\r",
+					"pm.globals.set(\"testOrderId\", \"1\");"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"// Collection Tests - 在每个请求后执行\r",
+					"pm.test(\"Response time is less than 5000ms\", function () {\r",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);\r",
+					"});\r",
+					"\r",
+					"pm.test(\"Response is JSON\", function () {\r",
+					"    pm.response.to.be.json;\r",
+					"});\r",
+					"\r",
+					"// 检查通用错误\r",
+					"if (pm.response.code >= 400) {\r",
+					"    pm.test(\"Error response has message\", function () {\r",
+					"        const jsonData = pm.response.json();\r",
+					"        pm.expect(jsonData).to.have.property('message');\r",
+					"    });\r",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://10.128.53.84:30080"
+		}
+	]
+}

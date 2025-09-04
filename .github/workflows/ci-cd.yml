@@ -51,16 +51,16 @@ jobs:
     strategy:
       matrix:
         service: 
-          # - eureka-server
+          - eureka-server
           # - config-server
           - api-gateway
-          # - auth-center
-          # - user-service
-          # - order-service
-          # - store-service
-          # - rider-service
-          # - admin-service
-          # - file-service
+          - auth-center
+          - user-service
+          - order-service
+          - store-service
+          - rider-service
+          - admin-service
+          - file-service
 
     steps:
     - name: Checkout code
@@ -226,8 +226,40 @@ jobs:
         echo "💚 Health Check:"
         kubectl get pods -n blm-microservices -o wide
 
+  integration-test:
+    needs: deploy-to-k8s
+    runs-on: self-hosted
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/micro_k8s'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Newman
+      run: npm install -g newman
+
+    - name: Run USER-TEST Collection
+      run: |
+        newman run postman_test/USER-TEST.postman_collection.json \
+          -e postman_test/USER-TEST.postman_environment.json
+
+    - name: Run MERCHANT-TEST Collection
+      run: |
+        newman run postman_test/MERCHANT-TEST.postman_collection.json \
+          -e postman_test/MERCHANT-TEST.postman_environment.json
+
+    - name: Run ADMIN-TEST Collection
+      run: |
+        newman run postman_test/ADMIN-TEST.postman_collection.json \
+          -e postman_test/ADMIN-TEST.postman_environment.json
+
   notify:
-    needs: [test, build-and-push, deploy-to-k8s]
+    needs: [test, build-and-push, deploy-to-k8s, integration-test]
     runs-on: ubuntu-latest
     if: always()
     
@@ -241,14 +273,17 @@ jobs:
         echo "🧪 测试结果: ${{ needs.test.result }}"
         echo "🏗️ 构建结果: ${{ needs.build-and-push.result }}"
         echo "🚀 部署结果: ${{ needs.deploy-to-k8s.result }}"
+        echo "🔄 集成测试: ${{ needs.integration-test.result }}"
         echo "==================================================="
         
-        if [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.build-and-push.result }}" == "success" ] && [ "${{ needs.deploy-to-k8s.result }}" == "success" ]; then
+        if [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.build-and-push.result }}" == "success" ] && [ "${{ needs.deploy-to-k8s.result }}" == "success" ] && [ "${{ needs.integration-test.result }}" == "success" ]; then
           echo "✅ 所有阶段执行成功！微服务已按正确顺序部署："
           echo "   1️⃣ Eureka Server (服务注册中心)"
           echo "   2️⃣ Config Server (配置中心)"
           echo "   3️⃣ 其他业务微服务"
           echo "🎉 BLM 微服务平台部署完成！"
+        elif [ "${{ needs.integration-test.result }}" == "failure" ]; then
+          echo "❌ 集成测试失败！请检查 API 功能和测试脚本"
         elif [ "${{ needs.deploy-to-k8s.result }}" == "failure" ]; then
           echo "❌ 部署失败！请检查 Kubernetes 集群状态和微服务配置"
         elif [ "${{ needs.build-and-push.result }}" == "failure" ]; then

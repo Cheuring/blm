@@ -1,0 +1,3804 @@
+{
+	"info": {
+		"_postman_id": "23ac8597-1551-4234-9e81-538efd3c7e2f",
+		"name": "MERCHANT-TEST",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38669901"
+	},
+	"item": [
+		{
+			"name": "用户注册",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// 生成唯一的用户名和手机号\r",
+							"const randomSuffix = Math.floor(Math.random() * 10000);\r",
+							"pm.environment.set('password', '123456');\r",
+							"pm.environment.set('username', 'testuser' + randomSuffix);\r",
+							"pm.environment.set('phone', '138' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0'));\r",
+							"pm.environment.set('email', `test${randomSuffix}@example.com`);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has user data\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('data');\r",
+							"    pm.expect(jsonData.data).to.have.property('id');\r",
+							"    pm.expect(jsonData.data).to.have.property('username');\r",
+							"    \r",
+							"    // 保存用户ID\r",
+							"    pm.environment.set('userId', jsonData.data.id);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"User role is MERCHANT\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.data.role).to.eql('MERCHANT'); \r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"password\": \"{{password}}\",\n  \"phone\": \"{{phone}}\",\n  \"username\": \"{{username}}\",\n  \"email\": \"{{email}}\",\n  \"role\": \"MERCHANT\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_auth}}/api/auth/register",
+					"host": [
+						"{{baseUrl_auth}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"register"
+					]
+				},
+				"description": "根据提供的用户信息创建新用户账号"
+			},
+			"response": [
+				{
+					"name": "注册成功",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"pifGqLj2NnqylK^u@)\",\n  \"phone\": \"string\",\n  \"username\": \"string\",\n  \"email\": \"string\",\n  \"role\": \"USER\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1754,\n  \"username\": \"string\",\n  \"phone\": \"string\",\n  \"email\": \"string\",\n  \"avatar\": \"string\",\n  \"role\": \"USER\",\n  \"status\": 3329,\n  \"createdAt\": \"2013-05-12T17:34:20.787Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "用户登录",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has token\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('data');\r",
+							"    pm.expect(jsonData.data).to.have.property('token');\r",
+							"    \r",
+							"    // 保存token到环境变量\r",
+							"    pm.environment.set('bearerToken', jsonData.data.token);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has user info\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.data).to.have.property('userInfo');\r",
+							"    pm.expect(jsonData.data.userInfo).to.have.property('id');\r",
+							"    \r",
+							"    // 更新用户ID\r",
+							"    pm.environment.set('userId', jsonData.data.userInfo.id);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"password\": \"{{password}}\",\n  \"username\": \"{{username}}\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_auth}}/api/auth/login",
+					"host": [
+						"{{baseUrl_auth}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				},
+				"description": "使用用户名和密码进行登录，成功后返回Token和用户信息"
+			},
+			"response": [
+				{
+					"name": "登录成功",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"password123\",\n  \"username\": \"testuser\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"token\": \"string\",\n  \"userInfo\": {\n    \"id\": 4429,\n    \"username\": \"string\",\n    \"phone\": \"string\",\n    \"email\": \"string\",\n    \"avatar\": \"string\",\n    \"role\": \"USER\",\n    \"status\": 1588,\n    \"createdAt\": \"1980-10-26T09:42:36.238Z\"\n  }\n}"
+				}
+			]
+		},
+		{
+			"name": "创建店铺",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script\r",
+							"pm.request.body = JSON.stringify({\r",
+							"    \"name\": \"测试店铺merchant\",\r",
+							"    \"description\": \"这是一个测试店铺\",\r",
+							"    \"phone\": \"13800138000\",\r",
+							"    \"address\": \"北京市海淀区中关村大街1号\",\r",
+							"    \"longitude\": 116.307852,\r",
+							"    \"latitude\": 39.983424,\r",
+							"    \"businessHours\": \"08:00-22:00\",\r",
+							"    \"deliveryFee\": 5.0,\r",
+							"    \"minOrderAmount\": 20.0,\r",
+							"    \"averageDeliveryTime\": 30,\r",
+							"    \"categoryId\": 1,\r",
+							"    \"licenseImg\": \"license.jpg\",\r",
+							"    \"permitImg\": \"permit.jpg\"\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Store created successfully\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(response.data).to.have.property('id');\r",
+							"    pm.expect(response.data.name).to.eql(\"测试店铺merchant\");\r",
+							"    // 保存店铺ID供后续测试使用\r",
+							"    pm.environment.set(\"storeId\", response.data.id);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"address\": \"string\",\n  \"categoryId\": 9,\n  \"name\": \"string\",\n  \"phone\": \"string\",\n  \"logo\": \"string\",\n  \"description\": \"string\",\n  \"longitude\": 748.4955283464467,\n  \"latitude\": 4249.692285177902,\n  \"businessHours\": \"08:00-22:00\",\n  \"deliveryFee\": 0,\n  \"minOrderAmount\": 0,\n  \"averageDeliveryTime\": 1203,\n  \"licenseImg\": \"string\",\n  \"permitImg\": \"string\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores"
+					]
+				},
+				"description": "商家创建新的店铺，提交审核"
+			},
+			"response": [
+				{
+					"name": "创建成功，等待审核",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"address\": \"string\",\n  \"categoryId\": 9,\n  \"name\": \"string\",\n  \"phone\": \"string\",\n  \"logo\": \"string\",\n  \"description\": \"string\",\n  \"longitude\": 748.4955283464467,\n  \"latitude\": 4249.692285177902,\n  \"businessHours\": \"08:00-22:00\",\n  \"deliveryFee\": 0,\n  \"minOrderAmount\": 0,\n  \"averageDeliveryTime\": 1203,\n  \"licenseImg\": \"string\",\n  \"permitImg\": \"string\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1,\n  \"name\": \"美味快餐店\",\n  \"logo\": \"https://example.com/logo.jpg\",\n  \"description\": \"提供各种美味快餐\",\n  \"phone\": \"13800138000\",\n  \"address\": \"北京市海淀区中关村大街1号\",\n  \"longitude\": 116.307852,\n  \"latitude\": 39.983424,\n  \"businessHours\": \"08:00-22:00\",\n  \"deliveryFee\": 5,\n  \"minOrderAmount\": 20,\n  \"averageDeliveryTime\": 30,\n  \"categoryId\": 1,\n  \"status\": \"OPEN\",\n  \"rating\": 4.5,\n  \"monthlySales\": 1000,\n  \"distance\": 1500,\n  \"hasPromotion\": true,\n  \"historyId\": 2,\n  \"visitedAt\": \"2023-10-08T15:14:55.238Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Admin注册",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// 生成唯一的用户名和手机号\r",
+							"const randomSuffix = Math.floor(Math.random() * 10000);\r",
+							"pm.environment.set('admin-password', '123456');\r",
+							"pm.environment.set('admin-username', 'testuser' + randomSuffix);\r",
+							"pm.environment.set('admin-phone', '138' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0'));\r",
+							"pm.environment.set('admin-email', `test${randomSuffix}@example.com`);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has user data\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('data');\r",
+							"    pm.expect(jsonData.data).to.have.property('id');\r",
+							"    pm.expect(jsonData.data).to.have.property('username');\r",
+							"    \r",
+							"    // 保存用户ID\r",
+							"    pm.environment.set('admin-userId', jsonData.data.id);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"User role is ADMIN\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.data.role).to.eql('ADMIN'); \r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"password\": \"{{admin-password}}\",\n  \"phone\": \"{{admin-phone}}\",\n  \"username\": \"{{admin-username}}\",\n  \"email\": \"{{admin-email}}\",\n  \"role\": \"ADMIN\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_auth}}/api/auth/register",
+					"host": [
+						"{{baseUrl_auth}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"register"
+					]
+				},
+				"description": "根据提供的用户信息创建新用户账号"
+			},
+			"response": [
+				{
+					"name": "注册成功",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"pifGqLj2NnqylK^u@)\",\n  \"phone\": \"string\",\n  \"username\": \"string\",\n  \"email\": \"string\",\n  \"role\": \"USER\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1754,\n  \"username\": \"string\",\n  \"phone\": \"string\",\n  \"email\": \"string\",\n  \"avatar\": \"string\",\n  \"role\": \"USER\",\n  \"status\": 3329,\n  \"createdAt\": \"2013-05-12T17:34:20.787Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Admin用户登录",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has token\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('data');\r",
+							"    pm.expect(jsonData.data).to.have.property('token');\r",
+							"    \r",
+							"    // 保存token到环境变量\r",
+							"    pm.environment.set('bearerToken-admin', jsonData.data.token);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has user info\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.data).to.have.property('userInfo');\r",
+							"    pm.expect(jsonData.data.userInfo).to.have.property('id');\r",
+							"    \r",
+							"    // 更新用户ID\r",
+							"    pm.environment.set('admin-userId', jsonData.data.userInfo.id);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"password\": \"{{admin-password}}\",\n  \"username\": \"{{admin-username}}\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_auth}}/api/auth/login",
+					"host": [
+						"{{baseUrl_auth}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				},
+				"description": "使用用户名和密码进行登录，成功后返回Token和用户信息"
+			},
+			"response": [
+				{
+					"name": "登录成功",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"password123\",\n  \"username\": \"testuser\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"token\": \"string\",\n  \"userInfo\": {\n    \"id\": 4429,\n    \"username\": \"string\",\n    \"phone\": \"string\",\n    \"email\": \"string\",\n    \"avatar\": \"string\",\n    \"role\": \"USER\",\n    \"status\": 1588,\n    \"createdAt\": \"1980-10-26T09:42:36.238Z\"\n  }\n}"
+				}
+			]
+		},
+		{
+			"name": "审核商家店铺",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.body = JSON.stringify({\r",
+							"    \"status\": \"APPROVED\",\r",
+							"    \"reason\": \"资质不符合要求\"\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Status updated successfully\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(response.status).to.eql(200);\r",
+							"    pm.expect(response.message).to.include(\"成功\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken-admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "*/*"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{admin_userId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"status\": \"APPROVED\",\n  \"reason\": \"资质不符合要求\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_admin}}/api/admin/stores/:id/status",
+					"host": [
+						"{{baseUrl_admin}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"stores",
+						":id",
+						"status"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						}
+					]
+				},
+				"description": "管理员审核商家店铺申请"
+			},
+			"response": [
+				{
+					"name": "审核成功",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "*/*"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"APPROVED\",\n  \"reason\": \"资质不符合要求\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/stores/:id/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"stores",
+								":id",
+								"status"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "*/*"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"status\": 200,\n  \"message\": \"操作成功\",\n  \"data\": {}\n}"
+				}
+			]
+		},
+		{
+			"name": "获取商家的店铺列表",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has required properties\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(response).to.have.property('status');\r",
+							"    pm.expect(response).to.have.property('message');\r",
+							"    pm.expect(response).to.have.property('data');\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Store data structure is valid\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    if (response.data && Array.isArray(response.data)) {\r",
+							"        console.log(response)\r",
+							"        response.data.forEach(store => {\r",
+							"            pm.expect(store).to.have.property('id');\r",
+							"            pm.expect(store).to.have.property('name');\r",
+							"            pm.expect(store).to.have.property('status');\r",
+							"        });\r",
+							"        pm.environment.set(\"storeId\",response.data[0].id);\r",
+							"    }\r",
+							"\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores"
+					]
+				},
+				"description": "获取当前登录商家的所有店铺信息"
+			},
+			"response": [
+				{
+					"name": "查询成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1,\n  \"name\": \"美味快餐店\",\n  \"logo\": \"https://example.com/logo.jpg\",\n  \"description\": \"提供各种美味快餐\",\n  \"phone\": \"13800138000\",\n  \"address\": \"北京市海淀区中关村大街1号\",\n  \"longitude\": 116.307852,\n  \"latitude\": 39.983424,\n  \"businessHours\": \"08:00-22:00\",\n  \"deliveryFee\": 5,\n  \"minOrderAmount\": 20,\n  \"averageDeliveryTime\": 30,\n  \"categoryId\": 1,\n  \"status\": \"OPEN\",\n  \"rating\": 4.5,\n  \"monthlySales\": 1000,\n  \"distance\": 1500,\n  \"hasPromotion\": true,\n  \"historyId\": 2,\n  \"visitedAt\": \"2023-10-08T15:14:55.238Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "获取商家单个店铺信息",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Store details are complete\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    const store = response.data;\r",
+							"    pm.expect(store).to.have.property('id');\r",
+							"    pm.expect(store).to.have.property('name');\r",
+							"    pm.expect(store).to.have.property('address');\r",
+							"    pm.expect(store).to.have.property('phone');\r",
+							"    pm.expect(store).to.have.property('status');\r",
+							"    pm.expect(store).to.have.property('rating');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/:id",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						}
+					]
+				},
+				"description": "根据storeId获取当前登录商家的店铺信息"
+			},
+			"response": [
+				{
+					"name": "查询成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1,\n  \"name\": \"美味快餐店\",\n  \"logo\": \"https://example.com/logo.jpg\",\n  \"description\": \"提供各种美味快餐\",\n  \"phone\": \"13800138000\",\n  \"address\": \"北京市海淀区中关村大街1号\",\n  \"longitude\": 116.307852,\n  \"latitude\": 39.983424,\n  \"businessHours\": \"08:00-22:00\",\n  \"deliveryFee\": 5,\n  \"minOrderAmount\": 20,\n  \"averageDeliveryTime\": 30,\n  \"categoryId\": 1,\n  \"status\": \"OPEN\",\n  \"rating\": 4.5,\n  \"monthlySales\": 1000,\n  \"distance\": 1500,\n  \"hasPromotion\": true,\n  \"historyId\": 2,\n  \"visitedAt\": \"2023-10-08T15:14:55.238Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "添加商品",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script\r",
+							"pm.request.body = JSON.stringify({\r",
+							"    \"categoryId\": 1,\r",
+							"    \"name\": \"测试商品\",\r",
+							"    \"price\": 29.9,\r",
+							"    \"originalPrice\": 39.9,\r",
+							"    \"description\": \"这是一个测试商品\",\r",
+							"    \"image\": \"food.jpg\",\r",
+							"    \"isFeatured\": 1\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Food created successfully\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(response.data).to.have.property('id');\r",
+							"    pm.expect(response.data.name).to.eql(\"测试商品\");\r",
+							"    pm.expect(response.data.price).to.eql(29.9);\r",
+							"    pm.environment.set(\"foodId\", response.data.id);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"categoryId\": 5504,\n  \"name\": \"string\",\n  \"price\": 7138.7729529399,\n  \"originalPrice\": 7144.101709085495,\n  \"description\": \"string\",\n  \"image\": \"str\",\n  \"isFeatured\": 0,\n  \"status\": 4237\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/:storeId/foods",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						":storeId",
+						"foods"
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						}
+					]
+				},
+				"description": "向指定店铺添加新商品"
+			},
+			"response": [
+				{
+					"name": "添加成功",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"categoryId\": 5504,\n  \"name\": \"string\",\n  \"price\": 7138.7729529399,\n  \"originalPrice\": 7144.101709085495,\n  \"description\": \"string\",\n  \"image\": \"str\",\n  \"isFeatured\": 0,\n  \"status\": 4237\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/foods",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"foods"
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1547,\n  \"storeId\": 5936,\n  \"categoryId\": 3039,\n  \"name\": \"st\",\n  \"price\": 9665.305510690829,\n  \"description\": \"string\",\n  \"image\": \"string\",\n  \"sales\": 4364,\n  \"status\": \"ON_SHELF\",\n  \"visitedAt\": \"2004-03-03T14:46:30.763Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "更改商品状态",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script\r",
+							"pm.request.body = JSON.stringify({\r",
+							"    \"foodStatus\": \"ON_SHELF\"\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Food status updated successfully\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(response.status).to.eql(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "*/*"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"foodStatus\": \"ON_SHELF\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/:storeId/foods/:foodId/status",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						":storeId",
+						"foods",
+						":foodId",
+						"status"
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						},
+						{
+							"key": "foodId",
+							"value": "{{foodId}}",
+							"description": "(Required) 商品ID"
+						}
+					]
+				},
+				"description": "更改指定商品的上架/下架状态"
+			},
+			"response": [
+				{
+					"name": "状态更新成功",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "*/*"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"foodStatus\": \"PENDING\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/foods/:foodId/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"foods",
+								":foodId",
+								"status"
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								},
+								{
+									"key": "foodId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "*/*"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"status\": 200,\n  \"message\": \"操作成功\",\n  \"data\": {}\n}"
+				}
+			]
+		},
+		{
+			"name": "获取店铺商品列表",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Foods list structure is valid\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    if (response.data && Array.isArray(response.data)) {\r",
+							"        response.data.forEach(food => {\r",
+							"            pm.expect(food).to.have.property('name');\r",
+							"            pm.expect(food).to.have.property('price');\r",
+							"            pm.expect(food).to.have.property('status');\r",
+							"        });\r",
+							"        pm.environment.set(\"foodId\",response.data[0].id)\r",
+							"    }\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/:storeId/foods",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						":storeId",
+						"foods"
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						}
+					]
+				},
+				"description": "获取指定店铺的所有商品信息"
+			},
+			"response": [
+				{
+					"name": "查询成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/foods?categoryId=9501&status=SUSPENDED",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"foods"
+							],
+							"query": [
+								{
+									"key": "categoryId",
+									"value": "9501",
+									"description": "商品分类ID (可选)"
+								},
+								{
+									"key": "status",
+									"value": "SUSPENDED",
+									"description": "商品状态 (可选, OFF_SHELF, ON_SHELF,SUSPENDED,PENDING)"
+								}
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1547,\n  \"storeId\": 5936,\n  \"categoryId\": 3039,\n  \"name\": \"st\",\n  \"price\": 9665.305510690829,\n  \"description\": \"string\",\n  \"image\": \"string\",\n  \"sales\": 4364,\n  \"status\": \"ON_SHELF\",\n  \"visitedAt\": \"2004-03-03T14:46:30.763Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "获取单个商品信息",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Food details are complete\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    const food = response.data;\r",
+							"    pm.expect(food).to.have.property('id');\r",
+							"    pm.expect(food).to.have.property('name');\r",
+							"    pm.expect(food).to.have.property('price');\r",
+							"    pm.expect(food).to.have.property('categoryId');\r",
+							"    pm.expect(food).to.have.property('status');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/:storeId/foods/:foodId",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						":storeId",
+						"foods",
+						":foodId"
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						},
+						{
+							"key": "foodId",
+							"value": "{{foodId}}",
+							"description": "(Required) 商品ID"
+						}
+					]
+				},
+				"description": "根据storeId和foodId获取指定商品信息"
+			},
+			"response": [
+				{
+					"name": "更新成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/foods/:foodId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"foods",
+								":foodId"
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								},
+								{
+									"key": "foodId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1547,\n  \"storeId\": 5936,\n  \"categoryId\": 3039,\n  \"name\": \"st\",\n  \"price\": 9665.305510690829,\n  \"description\": \"string\",\n  \"image\": \"string\",\n  \"sales\": 4364,\n  \"status\": \"ON_SHELF\",\n  \"visitedAt\": \"2004-03-03T14:46:30.763Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "更新商品信息",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script\r",
+							"pm.request.body = JSON.stringify({\r",
+							"    \"categoryId\": 1,\r",
+							"    \"name\": \"更新后的商品名称\",\r",
+							"    \"price\": 35.9,\r",
+							"    \"originalPrice\": 45.9,\r",
+							"    \"description\": \"更新后的商品描述\",\r",
+							"    \"image\": \"updated_food.jpg\",\r",
+							"    \"isFeatured\": 0\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Food updated successfully\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(response.data.name).to.eql(\"更新后的商品名称\");\r",
+							"    pm.expect(response.data.price).to.eql(35.9);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"categoryId\": 5504,\n  \"name\": \"string\",\n  \"price\": 7138.7729529399,\n  \"originalPrice\": 7144.101709085495,\n  \"description\": \"string\",\n  \"image\": \"str\",\n  \"isFeatured\": 0,\n  \"status\": 4237\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/:storeId/foods/:foodId",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						":storeId",
+						"foods",
+						":foodId"
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						},
+						{
+							"key": "foodId",
+							"value": "{{foodId}}",
+							"description": "(Required) 商品ID"
+						}
+					]
+				},
+				"description": "更新指定店铺内指定ID的商品信息"
+			},
+			"response": [
+				{
+					"name": "更新成功",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"categoryId\": 5504,\n  \"name\": \"string\",\n  \"price\": 7138.7729529399,\n  \"originalPrice\": 7144.101709085495,\n  \"description\": \"string\",\n  \"image\": \"str\",\n  \"isFeatured\": 0,\n  \"status\": 4237\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/foods/:foodId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"foods",
+								":foodId"
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								},
+								{
+									"key": "foodId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1547,\n  \"storeId\": 5936,\n  \"categoryId\": 3039,\n  \"name\": \"st\",\n  \"price\": 9665.305510690829,\n  \"description\": \"string\",\n  \"image\": \"string\",\n  \"sales\": 4364,\n  \"status\": \"ON_SHELF\",\n  \"visitedAt\": \"2004-03-03T14:46:30.763Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "上架更新后的商品",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script\r",
+							"pm.request.body = JSON.stringify({\r",
+							"    \"foodStatus\": \"ON_SHELF\"\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Food status updated successfully\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(response.status).to.eql(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "*/*"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"foodStatus\": \"ON_SHELF\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/:storeId/foods/:foodId/status",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						":storeId",
+						"foods",
+						":foodId",
+						"status"
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						},
+						{
+							"key": "foodId",
+							"value": "{{foodId}}",
+							"description": "(Required) 商品ID"
+						}
+					]
+				},
+				"description": "更改指定商品的上架/下架状态"
+			},
+			"response": [
+				{
+					"name": "状态更新成功",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "*/*"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"foodStatus\": \"PENDING\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/foods/:foodId/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"foods",
+								":foodId",
+								"status"
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								},
+								{
+									"key": "foodId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "*/*"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"status\": 200,\n  \"message\": \"操作成功\",\n  \"data\": {}\n}"
+				}
+			]
+		},
+		{
+			"name": "再次获取店铺商品列表",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Foods list structure is valid\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    if (response.data && Array.isArray(response.data)) {\r",
+							"        response.data.forEach(food => {\r",
+							"            pm.expect(food).to.have.property('name');\r",
+							"            pm.expect(food).to.have.property('price');\r",
+							"            pm.expect(food).to.have.property('status');\r",
+							"        });\r",
+							"        pm.environment.set(\"foodId\",response.data[0].id)\r",
+							"    }\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/:storeId/foods",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						":storeId",
+						"foods"
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						}
+					]
+				},
+				"description": "获取指定店铺的所有商品信息"
+			},
+			"response": [
+				{
+					"name": "查询成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/foods?categoryId=9501&status=SUSPENDED",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"foods"
+							],
+							"query": [
+								{
+									"key": "categoryId",
+									"value": "9501",
+									"description": "商品分类ID (可选)"
+								},
+								{
+									"key": "status",
+									"value": "SUSPENDED",
+									"description": "商品状态 (可选, OFF_SHELF, ON_SHELF,SUSPENDED,PENDING)"
+								}
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1547,\n  \"storeId\": 5936,\n  \"categoryId\": 3039,\n  \"name\": \"st\",\n  \"price\": 9665.305510690829,\n  \"description\": \"string\",\n  \"image\": \"string\",\n  \"sales\": 4364,\n  \"status\": \"ON_SHELF\",\n  \"visitedAt\": \"2004-03-03T14:46:30.763Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "添加商品分类",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script\r",
+							"pm.request.body = JSON.stringify({\r",
+							"    \"name\": \"测试分类\",\r",
+							"    \"sort\": 1\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Category created successfully\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(response.data).to.have.property('id');\r",
+							"    pm.expect(response.data.name).to.eql(\"测试分类\");\r",
+							"    pm.globals.set(\"createdCategoryId\", response.data.id);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"热销套餐\",\n  \"sort\": 1\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/:storeId/categories",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						":storeId",
+						"categories"
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						}
+					]
+				},
+				"description": "为指定店铺添加新的商品分类"
+			},
+			"response": [
+				{
+					"name": "添加成功",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"热销套餐\",\n  \"sort\": 1\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"categories"
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"sort\": 3472\n}"
+				}
+			]
+		},
+		{
+			"name": "获取商品分类列表",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Categories list structure is valid\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    if (response.data && Array.isArray(response.data)) {\r",
+							"        response.data.forEach(category => {\r",
+							"            pm.expect(category).to.have.property('id');\r",
+							"            pm.expect(category).to.have.property('name');\r",
+							"            pm.expect(category).to.have.property('sort');\r",
+							"        });\r",
+							"    }\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/:storeId/categories",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						":storeId",
+						"categories"
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						}
+					]
+				},
+				"description": "根据店铺id查询其有哪些商品分类"
+			},
+			"response": [
+				{
+					"name": "成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"categories"
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 3,\n  \"name\": \"string\",\n  \"sort\": 3472\n}"
+				}
+			]
+		},
+		{
+			"name": "获取店铺评价列表",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Foods list structure is valid\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    if (response.data && Array.isArray(response.data)) {\r",
+							"        response.data.forEach(food => {\r",
+							"            pm.expect(food).to.have.property('id');\r",
+							"            pm.expect(food).to.have.property('name');\r",
+							"            pm.expect(food).to.have.property('price');\r",
+							"            pm.expect(food).to.have.property('status');\r",
+							"        });\r",
+							"    }\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/:storeId/reviews?storeRating=5&page=0&size=10",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						":storeId",
+						"reviews"
+					],
+					"query": [
+						{
+							"key": "storeRating",
+							"value": "5",
+							"description": "店铺_评分筛选 (1-5)"
+						},
+						{
+							"key": "page",
+							"value": "0",
+							"description": "页码 (从0开始)"
+						},
+						{
+							"key": "size",
+							"value": "10",
+							"description": "每页数量"
+						}
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						}
+					]
+				},
+				"description": "根据对商家和骑手的评分获取指定店铺的评价列表，支持分页和筛选"
+			},
+			"response": [
+				{
+					"name": "查询成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/reviews?storeRating=5&page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"reviews"
+							],
+							"query": [
+								{
+									"key": "storeRating",
+									"value": "5",
+									"description": "店铺_评分筛选 (1-5)"
+								},
+								{
+									"key": "page",
+									"value": "0",
+									"description": "页码 (从0开始)"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "每页数量"
+								}
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"number\": 6714,\n  \"size\": 9455,\n  \"totalElements\": 6173,\n  \"totalPages\": 3373,\n  \"content\": [\n    {\n      \"id\": 1817,\n      \"userId\": 591,\n      \"userName\": \"string\",\n      \"userAvatar\": \"string\",\n      \"orderId\": 9251,\n      \"storeId\": 5511,\n      \"storeName\": \"string\",\n      \"content\": \"string\",\n      \"storeRating\": 7699,\n      \"riderRating\": 7409,\n      \"images\": \"string\",\n      \"createdAt\": \"2017-05-09T16:08:38.879Z\"\n    },\n    {\n      \"id\": 1339,\n      \"userId\": 47,\n      \"userName\": \"string\",\n      \"userAvatar\": \"string\",\n      \"orderId\": 8045,\n      \"storeId\": 6274,\n      \"storeName\": \"string\",\n      \"content\": \"string\",\n      \"storeRating\": 8858,\n      \"riderRating\": 9613,\n      \"images\": \"string\",\n      \"createdAt\": \"1976-01-21T20:40:19.505Z\"\n    }\n  ],\n  \"page\": 920\n}"
+				},
+				{
+					"name": "未授权或Token无效",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "*/*"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/reviews?storeRating=5&page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"reviews"
+							],
+							"query": [
+								{
+									"key": "storeRating",
+									"value": "5",
+									"description": "店铺_评分筛选 (1-5)"
+								},
+								{
+									"key": "page",
+									"value": "0",
+									"description": "页码 (从0开始)"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "每页数量"
+								}
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								}
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "*/*"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"status\": 200,\n  \"message\": \"操作成功\",\n  \"data\": {\n    \"number\": 972,\n    \"size\": 2902,\n    \"totalElements\": 9582,\n    \"totalPages\": 1524,\n    \"content\": [\n      {\n        \"id\": 7343,\n        \"userId\": 5589,\n        \"userName\": \"string\",\n        \"userAvatar\": \"str\",\n        \"orderId\": 586,\n        \"storeId\": 7526,\n        \"storeName\": \"stri\",\n        \"content\": \"string\",\n        \"storeRating\": 5992,\n        \"riderRating\": 263,\n        \"images\": \"string\",\n        \"createdAt\": \"1992-06-06T07:21:59.624Z\"\n      },\n      {\n        \"id\": 7260,\n        \"userId\": 4498,\n        \"userName\": \"string\",\n        \"userAvatar\": \"string\",\n        \"orderId\": 6601,\n        \"storeId\": 9396,\n        \"storeName\": \"string\",\n        \"content\": \"string\",\n        \"storeRating\": 1395,\n        \"riderRating\": 5527,\n        \"images\": \"string\",\n        \"createdAt\": \"2003-11-25T08:42:21.177Z\"\n      }\n    ],\n    \"page\": 1731\n  }\n}"
+				},
+				{
+					"name": "无权限访问 (非商家用户)",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "*/*"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/reviews?storeRating=5&page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"reviews"
+							],
+							"query": [
+								{
+									"key": "storeRating",
+									"value": "5",
+									"description": "店铺_评分筛选 (1-5)"
+								},
+								{
+									"key": "page",
+									"value": "0",
+									"description": "页码 (从0开始)"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "每页数量"
+								}
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								}
+							]
+						}
+					},
+					"status": "Forbidden",
+					"code": 403,
+					"_postman_previewlanguage": "text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "*/*"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"status\": 200,\n  \"message\": \"操作成功\",\n  \"data\": {\n    \"number\": 972,\n    \"size\": 2902,\n    \"totalElements\": 9582,\n    \"totalPages\": 1524,\n    \"content\": [\n      {\n        \"id\": 7343,\n        \"userId\": 5589,\n        \"userName\": \"string\",\n        \"userAvatar\": \"str\",\n        \"orderId\": 586,\n        \"storeId\": 7526,\n        \"storeName\": \"stri\",\n        \"content\": \"string\",\n        \"storeRating\": 5992,\n        \"riderRating\": 263,\n        \"images\": \"string\",\n        \"createdAt\": \"1992-06-06T07:21:59.624Z\"\n      },\n      {\n        \"id\": 7260,\n        \"userId\": 4498,\n        \"userName\": \"string\",\n        \"userAvatar\": \"string\",\n        \"orderId\": 6601,\n        \"storeId\": 9396,\n        \"storeName\": \"string\",\n        \"content\": \"string\",\n        \"storeRating\": 1395,\n        \"riderRating\": 5527,\n        \"images\": \"string\",\n        \"createdAt\": \"2003-11-25T08:42:21.177Z\"\n      }\n    ],\n    \"page\": 1731\n  }\n}"
+				},
+				{
+					"name": "店铺不存在或不属于当前商家",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "*/*"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:storeId/reviews?storeRating=5&page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":storeId",
+								"reviews"
+							],
+							"query": [
+								{
+									"key": "storeRating",
+									"value": "5",
+									"description": "店铺_评分筛选 (1-5)"
+								},
+								{
+									"key": "page",
+									"value": "0",
+									"description": "页码 (从0开始)"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "每页数量"
+								}
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								}
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "*/*"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"status\": 200,\n  \"message\": \"操作成功\",\n  \"data\": {\n    \"number\": 972,\n    \"size\": 2902,\n    \"totalElements\": 9582,\n    \"totalPages\": 1524,\n    \"content\": [\n      {\n        \"id\": 7343,\n        \"userId\": 5589,\n        \"userName\": \"string\",\n        \"userAvatar\": \"str\",\n        \"orderId\": 586,\n        \"storeId\": 7526,\n        \"storeName\": \"stri\",\n        \"content\": \"string\",\n        \"storeRating\": 5992,\n        \"riderRating\": 263,\n        \"images\": \"string\",\n        \"createdAt\": \"1992-06-06T07:21:59.624Z\"\n      },\n      {\n        \"id\": 7260,\n        \"userId\": 4498,\n        \"userName\": \"string\",\n        \"userAvatar\": \"string\",\n        \"orderId\": 6601,\n        \"storeId\": 9396,\n        \"storeName\": \"string\",\n        \"content\": \"string\",\n        \"storeRating\": 1395,\n        \"riderRating\": 5527,\n        \"images\": \"string\",\n        \"createdAt\": \"2003-11-25T08:42:21.177Z\"\n      }\n    ],\n    \"page\": 1731\n  }\n}"
+				}
+			]
+		},
+		{
+			"name": "获取店铺统计数据",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Statistics structure is valid\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    const stats = response.data;\r",
+							"    pm.expect(stats).to.have.property('storeId');\r",
+							"    pm.expect(stats).to.have.property('todayOrderCount');\r",
+							"    pm.expect(stats).to.have.property('todaySales');\r",
+							"    pm.expect(stats).to.have.property('monthOrderCount');\r",
+							"    pm.expect(stats).to.have.property('monthSales');\r",
+							"    pm.expect(stats).to.have.property('hotFoods');\r",
+							"    pm.expect(stats).to.have.property('reviewStatistics');\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Hot foods structure is valid\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    if (response.data.hotFoods && response.data.hotFoods.length > 0) {\r",
+							"        response.data.hotFoods.forEach(food => {\r",
+							"            pm.expect(food).to.have.property('foodId');\r",
+							"            pm.expect(food).to.have.property('foodName');\r",
+							"            pm.expect(food).to.have.property('saleCount');\r",
+							"        });\r",
+							"    }\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/statics/:storeId?startDate=1997-01-13&endDate=2097-01-13",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						"statics",
+						":storeId"
+					],
+					"query": [
+						{
+							"key": "startDate",
+							"value": "1997-01-13",
+							"description": "开始日期 (格式: yyyy-MM-dd)"
+						},
+						{
+							"key": "endDate",
+							"value": "2097-01-13",
+							"description": "结束日期 (格式: yyyy-MM-dd)"
+						}
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						}
+					]
+				},
+				"description": "商家查看店铺总体运营数据"
+			},
+			"response": [
+				{
+					"name": "查询成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/statics/:storeId?startDate=1997-01-13&endDate=1997-01-13",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								"statics",
+								":storeId"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "1997-01-13",
+									"description": "开始日期 (格式: yyyy-MM-dd)"
+								},
+								{
+									"key": "endDate",
+									"value": "1997-01-13",
+									"description": "结束日期 (格式: yyyy-MM-dd)"
+								}
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"storeId\": 5401,\n  \"storeName\": \"string\",\n  \"todayOrderCount\": 1420,\n  \"todaySales\": 9401.95265073737,\n  \"yesterdayOrderCount\": 3072,\n  \"yesterdaySales\": 1572.409035045832,\n  \"monthOrderCount\": 3577,\n  \"monthSales\": 1905.6265280775997,\n  \"totalOrderCount\": 8020,\n  \"totalSales\": 5755.462000721807,\n  \"dailyOrderTrend\": {\n    \"dateList\": \"string\",\n    \"totalOrderList\": \"string\",\n    \"newOrderList\": \"string\"\n  },\n  \"dailySalesTrend\": {\n    \"dateList\": \"string\",\n    \"turnoverList\": \"string\"\n  },\n  \"hotFoods\": [\n    {\n      \"foodId\": 7631,\n      \"foodName\": \"string\",\n      \"foodImage\": \"string\",\n      \"saleCount\": 4068,\n      \"saleAmount\": 69.96189604883352\n    },\n    {\n      \"foodId\": 138,\n      \"foodName\": \"string\",\n      \"foodImage\": \"string\",\n      \"saleCount\": 1761,\n      \"saleAmount\": 2419.0672874176244\n    }\n  ],\n  \"reviewStatistics\": {\n    \"storeId\": 2170,\n    \"storeName\": \"string\",\n    \"totalReviews\": 6882,\n    \"averageRating\": 4.5,\n    \"ratingCounts\": {\n      \"1\": 0,\n      \"2\": 1,\n      \"3\": 3,\n      \"4\": 5,\n      \"5\": 10\n    },\n    \"goodRatePercentage\": 0.85\n  }\n}"
+				}
+			]
+		},
+		{
+			"name": "店铺更新订单状态",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script\r",
+							"pm.request.body = JSON.stringify({\r",
+							"    \"orderStatus\": \"MERCHANT_CONFIRMED\"\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "*/*"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"orderStatus\": \"PICKED_UP\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/orders/:storeId/:orderId/status",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"orders",
+						":storeId",
+						":orderId",
+						"status"
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺id"
+						},
+						{
+							"key": "orderId",
+							"value": "{{orderId}}",
+							"description": "(Required) 订单id"
+						}
+					]
+				},
+				"description": "店铺根据订单id和店铺id更新订单状态"
+			},
+			"response": [
+				{
+					"name": "成功",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "*/*"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderStatus\": \"PICKED_UP\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/orders/:storeId/:orderId/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"orders",
+								":storeId",
+								":orderId",
+								"status"
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								},
+								{
+									"key": "orderId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "*/*"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"status\": 200,\n  \"message\": \"操作成功\",\n  \"data\": {}\n}"
+				}
+			]
+		},
+		{
+			"name": "店铺根据订单id和店铺id获取订单详情",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/orders/:storeId/orderDetail?id={{orderId}}",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"orders",
+						":storeId",
+						"orderDetail"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "{{orderId}}",
+							"description": "(Required) 订单id"
+						}
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺id"
+						}
+					]
+				},
+				"description": "店铺根据订单id和店铺id获取订单详情"
+			},
+			"response": [
+				{
+					"name": "成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/orders/:storeId/orderDetail?id=9501",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"orders",
+								":storeId",
+								"orderDetail"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "9501",
+									"description": "(Required) 订单id"
+								}
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 7860,\n  \"orderNo\": \"string\",\n  \"userId\": 5277,\n  \"storeId\": 409,\n  \"storeName\": \"string\",\n  \"addressId\": 6152,\n  \"deliveryAddress\": {\n    \"id\": 8343,\n    \"receiver\": \"string\",\n    \"phone\": \"string\",\n    \"province\": \"string\",\n    \"city\": \"string\",\n    \"district\": \"string\",\n    \"detailAddress\": \"string\",\n    \"isDefault\": 4382\n  },\n  \"totalAmount\": 5427.656461195913,\n  \"deliveryFee\": 4112.155203383972,\n  \"discountAmount\": 9707.148049159381,\n  \"paymentAmount\": 8646.36609669704,\n  \"paymentType\": \"ALIPAY\",\n  \"status\": \"DELIVERING\",\n  \"remark\": \"string\",\n  \"expectedTime\": \"2015-09-06T14:04:55.747Z\",\n  \"actualTime\": \"1974-11-04T20:31:19.222Z\",\n  \"createdAt\": \"1984-11-08T20:50:20.224Z\",\n  \"paidAt\": \"1998-12-19T13:05:05.608Z\",\n  \"shippedAt\": \"2002-07-04T19:14:16.715Z\",\n  \"completedAt\": \"1961-03-24T10:59:13.088Z\",\n  \"cancelledAt\": \"2022-05-28T01:29:57.603Z\",\n  \"cancelReason\": \"string\",\n  \"riderId\": 8243,\n  \"riderName\": \"string\",\n  \"riderPhone\": \"string\",\n  \"items\": [\n    {\n      \"id\": 2999,\n      \"foodId\": 761,\n      \"foodName\": \"string\",\n      \"foodImage\": \"string\",\n      \"price\": 7141.705628249424,\n      \"quantity\": 4249,\n      \"amount\": 1905.6061353441178\n    },\n    {\n      \"id\": 1758,\n      \"foodId\": 9214,\n      \"foodName\": \"string\",\n      \"foodImage\": \"string\",\n      \"price\": 2595.646864526753,\n      \"quantity\": 8527,\n      \"amount\": 8794.710972909621\n    }\n  ]\n}"
+				}
+			]
+		},
+		{
+			"name": "获取订单列表",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Orders list structure is valid\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    if (response.data && Array.isArray(response.data)) {\r",
+							"        response.data.forEach(order => {\r",
+							"            pm.expect(order).to.have.property('id');\r",
+							"            pm.expect(order).to.have.property('orderNo');\r",
+							"            pm.expect(order).to.have.property('status');\r",
+							"            pm.expect(order).to.have.property('totalAmount');\r",
+							"        });\r",
+							"    }\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/orders/:storeId?status=ORDER_CREATED&page=1&size=10",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"orders",
+						":storeId"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "ORDER_CREATED",
+							"description": "订单状态"
+						},
+						{
+							"key": "page",
+							"value": "1",
+							"description": "页码"
+						},
+						{
+							"key": "size",
+							"value": "10",
+							"description": "每页数量"
+						}
+					],
+					"variable": [
+						{
+							"key": "storeId",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺id"
+						}
+					]
+				},
+				"description": "获取订单列表"
+			},
+			"response": [
+				{
+					"name": "成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/orders/:storeId?status=ORDER_CREATED&page=1&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"orders",
+								":storeId"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "ORDER_CREATED",
+									"description": "订单状态"
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "页码"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "每页数量"
+								}
+							],
+							"variable": [
+								{
+									"key": "storeId"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 9807,\n  \"orderNo\": \"string\",\n  \"storeId\": 3481,\n  \"storeName\": \"string\",\n  \"storeImage\": \"string\",\n  \"totalAmount\": 2876.600085290253,\n  \"deliveryFee\": 5735.705238562306,\n  \"discountAmount\": 396.59370420656484,\n  \"paymentAmount\": 9609.060705074166,\n  \"status\": \"DELIVERING\",\n  \"paymentStatus\": 6987,\n  \"createdAt\": \"1999-12-23T05:12:41.589Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "更新店铺信息",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request Script\r",
+							"pm.request.body = JSON.stringify({\r",
+							"    \"name\": `更新店铺`,\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Food updated successfully\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(response.data.name).to.eql(\"更新店铺\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"string\",\n  \"logo\": \"st\",\n  \"description\": \"string\",\n  \"phone\": \"string\",\n  \"address\": \"string\",\n  \"longitude\": 4709.6965678960405,\n  \"latitude\": 4825.60925603756,\n  \"businessHours\": \"08:00-22:00\",\n  \"deliveryFee\": 3052.3834282222074,\n  \"minOrderAmount\": 877.7356124976299,\n  \"averageDeliveryTime\": 125,\n  \"categoryId\": 1497,\n  \"licenseImg\": \"string\",\n  \"permitImg\": \"string\"\n}",
+					"options": {
+						"raw": {
+							"headerFamily": "json",
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores/:id",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "{{storeId}}",
+							"description": "(Required) 店铺ID"
+						}
+					]
+				},
+				"description": "商家更新指定ID的店铺信息"
+			},
+			"response": [
+				{
+					"name": "更新成功",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"string\",\n  \"logo\": \"st\",\n  \"description\": \"string\",\n  \"phone\": \"string\",\n  \"address\": \"string\",\n  \"longitude\": 4709.6965678960405,\n  \"latitude\": 4825.60925603756,\n  \"businessHours\": \"08:00-22:00\",\n  \"deliveryFee\": 3052.3834282222074,\n  \"minOrderAmount\": 877.7356124976299,\n  \"averageDeliveryTime\": 125,\n  \"categoryId\": 1497,\n  \"licenseImg\": \"string\",\n  \"permitImg\": \"string\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1,\n  \"name\": \"美味快餐店\",\n  \"logo\": \"https://example.com/logo.jpg\",\n  \"description\": \"提供各种美味快餐\",\n  \"phone\": \"13800138000\",\n  \"address\": \"北京市海淀区中关村大街1号\",\n  \"longitude\": 116.307852,\n  \"latitude\": 39.983424,\n  \"businessHours\": \"08:00-22:00\",\n  \"deliveryFee\": 5,\n  \"minOrderAmount\": 20,\n  \"averageDeliveryTime\": 30,\n  \"categoryId\": 1,\n  \"status\": \"OPEN\",\n  \"rating\": 4.5,\n  \"monthlySales\": 1000,\n  \"distance\": 1500,\n  \"hasPromotion\": true,\n  \"historyId\": 2,\n  \"visitedAt\": \"2023-10-08T15:14:55.238Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "再次获取商家的店铺列表",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Tests\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has required properties\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(response).to.have.property('status');\r",
+							"    pm.expect(response).to.have.property('message');\r",
+							"    pm.expect(response).to.have.property('data');\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Store data structure is valid\", function () {\r",
+							"    const response = pm.response.json();\r",
+							"    if (response.data && Array.isArray(response.data)) {\r",
+							"        console.log(response)\r",
+							"        response.data.forEach(store => {\r",
+							"            pm.expect(store).to.have.property('id');\r",
+							"            pm.expect(store).to.have.property('name');\r",
+							"            pm.expect(store).to.have.property('status');\r",
+							"        });\r",
+							"        pm.environment.set(\"storeId\",response.data[0].id);\r",
+							"    }\r",
+							"\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "X-User-Id",
+						"value": "{{userId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl_merchant}}/api/merchant/stores",
+					"host": [
+						"{{baseUrl_merchant}}"
+					],
+					"path": [
+						"api",
+						"merchant",
+						"stores"
+					]
+				},
+				"description": "获取当前登录商家的所有店铺信息"
+			},
+			"response": [
+				{
+					"name": "查询成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>",
+								"description": "Added as a part of security scheme: bearer"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/merchant/stores",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"merchant",
+								"stores"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1,\n  \"name\": \"美味快餐店\",\n  \"logo\": \"https://example.com/logo.jpg\",\n  \"description\": \"提供各种美味快餐\",\n  \"phone\": \"13800138000\",\n  \"address\": \"北京市海淀区中关村大街1号\",\n  \"longitude\": 116.307852,\n  \"latitude\": 39.983424,\n  \"businessHours\": \"08:00-22:00\",\n  \"deliveryFee\": 5,\n  \"minOrderAmount\": 20,\n  \"averageDeliveryTime\": 30,\n  \"categoryId\": 1,\n  \"status\": \"OPEN\",\n  \"rating\": 4.5,\n  \"monthlySales\": 1000,\n  \"distance\": 1500,\n  \"hasPromotion\": true,\n  \"historyId\": 2,\n  \"visitedAt\": \"2023-10-08T15:14:55.238Z\"\n}"
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{bearToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl_auth",
+			"value": "http://10.128.53.84:30080"
+		},
+		{
+			"key": "baseUrl_merchant",
+			"value": "http://10.128.53.84:30080"
+		},
+		{
+			"key": "baseUrl_admin",
+			"value": "http://10.128.53.84:30080"
+		}
+	]
+}
